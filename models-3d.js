@@ -2,31 +2,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('webgl-canvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
-  // Scene Setup
+  // Scene, Camera, Renderer
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 8);
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 7.5);
 
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
 
   // Lighting System
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+  const ambientLight = new THREE.AmbientLight(0x0f172a, 2.5);
   scene.add(ambientLight);
 
-  const cyanLight = new THREE.PointLight(0x00f2fe, 5, 25);
-  cyanLight.position.set(5, 5, 5);
-  scene.add(cyanLight);
+  const cyanPoint = new THREE.PointLight(0x00f2fe, 8, 30);
+  cyanPoint.position.set(6, 6, 6);
+  scene.add(cyanPoint);
 
-  const purpleLight = new THREE.PointLight(0x7000ff, 5, 25);
-  purpleLight.position.set(-5, -5, 3);
-  scene.add(purpleLight);
+  const purplePoint = new THREE.PointLight(0x9d4edd, 8, 30);
+  purplePoint.position.set(-6, -6, 4);
+  scene.add(purplePoint);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  dirLight.position.set(0, 10, 10);
+  scene.add(dirLight);
 
   const Y_OFFSET = 12;
 
-  // Global Mouse Cursor Tracking Logic
+  // Global Smooth Mouse Interactions
   let mouseX = 0, mouseY = 0;
   let targetMouseX = 0, targetMouseY = 0;
 
@@ -35,242 +40,258 @@ document.addEventListener('DOMContentLoaded', () => {
     targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
+  // Texture Generator for Core CW Logo
+  function createCWTexture() {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 512;
+    const ctx = c.getContext('2d');
+    
+    const grad = ctx.createRadialGradient(256, 256, 10, 256, 256, 256);
+    grad.addColorStop(0, 'rgba(157, 78, 221, 0.9)');
+    grad.addColorStop(0.5, 'rgba(0, 242, 254, 0.6)');
+    grad.addColorStop(1, 'rgba(3, 7, 18, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    ctx.strokeStyle = '#00f2fe';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(256, 256, 200, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 160px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#00f2fe';
+    ctx.shadowBlur = 25;
+    ctx.fillText('CW', 256, 256);
+
+    return new THREE.CanvasTexture(c);
+  }
+
   // ==========================================
-  // 1. HERO: HOLOGRAPHIC HYPER-CORE WITH CW LOGO
+  // 1. HERO: QUANTUM CORE & GLASS SHARD SWARM
   // ==========================================
   const heroGroup = new THREE.Group();
   heroGroup.position.set(3.2, 0, 0);
 
-  // Outer Glowing Particle Swarm
   const particleGeo = new THREE.BufferGeometry();
-  const particleCount = 200;
-  const posArray = new Float32Array(particleCount * 3);
-  for (let i = 0; i < particleCount * 3; i++) {
-    posArray[i] = (Math.random() - 0.5) * 6;
+  const count = 350;
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 7;
   }
-  particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-  const particleMat = new THREE.PointsMaterial({ size: 0.04, color: 0x00f2fe, transparent: true, opacity: 0.8 });
-  const particles = new THREE.Points(particleGeo, particleMat);
-  heroGroup.add(particles);
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particleMat = new THREE.PointsMaterial({ size: 0.035, color: 0x00f2fe, transparent: true, opacity: 0.85 });
+  const heroParticles = new THREE.Points(particleGeo, particleMat);
+  heroGroup.add(heroParticles);
 
-  // Outer Wireframe Icosahedron
-  const icoGeo = new THREE.IcosahedronGeometry(1.3, 1);
-  const icoMat = new THREE.MeshStandardMaterial({ 
-    color: 0x030712, 
-    wireframe: true, 
-    emissive: 0x00f2fe, 
-    emissiveIntensity: 0.6,
-    metalness: 0.9,
-    roughness: 0.1
+  const shardGroup = new THREE.Group();
+  const shardMat = new THREE.MeshPhysicalMaterial({
+    color: 0x00f2fe, metalness: 0.1, roughness: 0.1, transmission: 0.9, thickness: 0.5, transparent: true, opacity: 0.7
   });
-  const coreIco = new THREE.Mesh(icoGeo, icoMat);
-  heroGroup.add(coreIco);
+  const shards = [];
+  for (let i = 0; i < 8; i++) {
+    const shardGeo = new THREE.ConeGeometry(0.2, 0.8, 3);
+    const shard = new THREE.Mesh(shardGeo, shardMat);
+    const angle = (i / 8) * Math.PI * 2;
+    shard.position.set(Math.cos(angle) * 2.2, (Math.random() - 0.5) * 1.5, Math.sin(angle) * 2.2);
+    shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+    shardGroup.add(shard);
+    shards.push({ mesh: shard, angle: angle, speed: 0.008 + Math.random() * 0.005 });
+  }
+  heroGroup.add(shardGroup);
 
-  // Dynamic CW Logo Texture Canvas Generation
-  const cwCanvas = document.createElement('canvas');
-  cwCanvas.width = 512;
-  cwCanvas.height = 512;
-  const cwCtx = cwCanvas.getContext('2d');
+  const cwMat = new THREE.MeshBasicMaterial({ map: createCWTexture(), transparent: true });
+  const cwCore = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 32), cwMat);
+  heroGroup.add(cwCore);
 
-  // Radial Neon Glow Background
-  const gradient = cwCtx.createRadialGradient(256, 256, 20, 256, 256, 240);
-  gradient.addColorStop(0, '#7000ff');
-  gradient.addColorStop(0.5, '#00f2fe');
-  gradient.addColorStop(1, '#030712');
-  cwCtx.fillStyle = gradient;
-  cwCtx.fillRect(0, 0, 512, 512);
+  const cageGeo = new THREE.IcosahedronGeometry(1.4, 1);
+  const cageMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, wireframe: true, emissive: 0x00f2fe, emissiveIntensity: 0.8 });
+  const cage = new THREE.Mesh(cageGeo, cageMat);
+  heroGroup.add(cage);
 
-  // Outer Holographic Circle Ring
-  cwCtx.strokeStyle = '#00f2fe';
-  cwCtx.lineWidth = 12;
-  cwCtx.beginPath();
-  cwCtx.arc(256, 256, 220, 0, Math.PI * 2);
-  cwCtx.stroke();
+  const ringMat = new THREE.MeshPhysicalMaterial({ color: 0x9d4edd, metalness: 0.8, roughness: 0.2, clearcoat: 1.0 });
+  const gyroRing1 = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.03, 16, 100), ringMat);
+  gyroRing1.rotation.x = Math.PI / 3;
+  heroGroup.add(gyroRing1);
 
-  // CW Typography
-  cwCtx.fillStyle = '#ffffff';
-  cwCtx.font = '900 180px sans-serif';
-  cwCtx.textAlign = 'center';
-  cwCtx.textBaseline = 'middle';
-  cwCtx.shadowColor = '#00f2fe';
-  cwCtx.shadowBlur = 30;
-  cwCtx.fillText('CW', 256, 256);
-
-  const cwTexture = new THREE.CanvasTexture(cwCanvas);
-
-  // Central Holographic CW Core Sphere
-  const innerGeo = new THREE.SphereGeometry(0.75, 32, 32);
-  const innerMat = new THREE.MeshBasicMaterial({ map: cwTexture });
-  const innerCore = new THREE.Mesh(innerGeo, innerMat);
-  heroGroup.add(innerCore);
-
-  // Surrounding Orbital Torus Rings
-  const ringGeo = new THREE.TorusGeometry(2.2, 0.03, 16, 100);
-  const ringMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.5 });
-  const ring1 = new THREE.Mesh(ringGeo, ringMat);
-  ring1.rotation.x = Math.PI / 3;
-  heroGroup.add(ring1);
-
-  const ring2 = new THREE.Mesh(ringGeo, ringMat);
-  ring2.rotation.x = -Math.PI / 3;
-  heroGroup.add(ring2);
+  const gyroRing2 = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.02, 16, 100), ringMat);
+  gyroRing2.rotation.y = Math.PI / 4;
+  heroGroup.add(gyroRing2);
 
   scene.add(heroGroup);
 
   // ==========================================
-  // 2. COURSES: CURVED MONITOR & MATRIX CODE
+  // 2. COURSES: CYBER TERMINAL & STREAMING CODE
   // ==========================================
   const coursesGroup = new THREE.Group();
   coursesGroup.position.set(3.2, -Y_OFFSET, 0);
 
-  const monitorGeo = new THREE.BoxGeometry(3.6, 2.2, 0.15);
-  const monitorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1 });
-  const monitor = new THREE.Mesh(monitorGeo, monitorMat);
-  coursesGroup.add(monitor);
+  const monitorFrame = new THREE.Mesh(
+    new THREE.BoxGeometry(3.8, 2.3, 0.2),
+    new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.95, roughness: 0.15 })
+  );
+  coursesGroup.add(monitorFrame);
+
+  const edgeGlow = new THREE.Mesh(
+    new THREE.BoxGeometry(3.86, 2.36, 0.05),
+    new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true })
+  );
+  edgeGlow.position.z = -0.05;
+  coursesGroup.add(edgeGlow);
 
   const codeCanvas = document.createElement('canvas');
-  codeCanvas.width = 512;
-  codeCanvas.height = 320;
-  const ctx = codeCanvas.getContext('2d');
-  const codeTexture = new THREE.CanvasTexture(codeCanvas);
+  codeCanvas.width = 1024; codeCanvas.height = 640;
+  const codeCtx = codeCanvas.getContext('2d');
+  const codeTex = new THREE.CanvasTexture(codeCanvas);
 
-  const screenGeo = new THREE.PlaneGeometry(3.4, 2.0);
-  const screenMat = new THREE.MeshBasicMaterial({ map: codeTexture });
-  const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-  screenMesh.position.z = 0.09;
+  const screenMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.6, 2.1),
+    new THREE.MeshBasicMaterial({ map: codeTex })
+  );
+  screenMesh.position.z = 0.11;
   coursesGroup.add(screenMesh);
 
-  const matrixCols = Array(32).fill(0);
-  function updateMatrixCode() {
-    ctx.fillStyle = 'rgba(3, 7, 18, 0.2)';
-    ctx.fillRect(0, 0, codeCanvas.width, codeCanvas.height);
-    ctx.fillStyle = '#00f2fe';
-    ctx.font = 'bold 15px monospace';
+  const matrixCols = Array(64).fill(0);
+  function drawCodeStream() {
+    codeCtx.fillStyle = 'rgba(3, 7, 18, 0.25)';
+    codeCtx.fillRect(0, 0, codeCanvas.width, codeCanvas.height);
+    codeCtx.fillStyle = '#00f2fe';
+    codeCtx.font = '600 20px "JetBrains Mono", monospace';
 
     matrixCols.forEach((y, i) => {
-      const char = String.fromCharCode(0x30A0 + Math.random() * 96);
-      ctx.fillText(char, i * 16, y);
-      if (y > 320 + Math.random() * 10000) matrixCols[i] = 0;
-      else matrixCols[i] = y + 16;
+      const char = String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96));
+      codeCtx.fillText(char, i * 16, y);
+      if (y > 640 + Math.random() * 10000) matrixCols[i] = 0;
+      else matrixCols[i] = y + 20;
     });
-    codeTexture.needsUpdate = true;
+    codeTex.needsUpdate = true;
   }
+
   scene.add(coursesGroup);
 
   // ==========================================
-  // 3. DASHBOARD: 3D GRAPH WITH LINE NODE
+  // 3. DASHBOARD: 3D GLASS DATA VISUALIZER
   // ==========================================
   const dashboardGroup = new THREE.Group();
   dashboardGroup.position.set(3.2, -Y_OFFSET * 2, 0);
 
-  const bars = [];
-  const barCount = 6;
-  const linePoints = [];
+  const glassBars = [];
+  const barCount = 7;
+  const barMat = new THREE.MeshPhysicalMaterial({
+    color: 0x00f2fe, metalness: 0.2, roughness: 0.1, transmission: 0.8, thickness: 0.8, emissive: 0x00f2fe, emissiveIntensity: 0.3
+  });
 
+  const chartPoints = [];
   for (let i = 0; i < barCount; i++) {
-    const barGeo = new THREE.BoxGeometry(0.35, 1, 0.35);
-    const barMat = new THREE.MeshStandardMaterial({ 
-      color: 0x00f2fe, 
-      roughness: 0.2, 
-      metalness: 0.8,
-      emissive: 0x00f2fe,
-      emissiveIntensity: 0.2
-    });
-    const bar = new THREE.Mesh(barGeo, barMat);
-    bar.position.x = (i - barCount / 2) * 0.6;
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1, 0.32), barMat);
+    bar.position.x = (i - barCount / 2) * 0.55;
     dashboardGroup.add(bar);
-    bars.push(bar);
-
-    linePoints.push(new THREE.Vector3(bar.position.x, 1, 0));
+    glassBars.push(bar);
+    chartPoints.push(new THREE.Vector3(bar.position.x, 1, 0));
   }
 
-  const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
-  const lineMat = new THREE.LineBasicMaterial({ color: 0x7000ff, linewidth: 3 });
-  const lineGraph = new THREE.Line(lineGeo, lineMat);
-  dashboardGroup.add(lineGraph);
+  const chartLineGeo = new THREE.BufferGeometry().setFromPoints(chartPoints);
+  const chartLineMat = new THREE.LineBasicMaterial({ color: 0x9d4edd, linewidth: 4 });
+  const chartLine = new THREE.Line(chartLineGeo, chartLineMat);
+  dashboardGroup.add(chartLine);
 
   scene.add(dashboardGroup);
 
   // ==========================================
-  // 4. STORIES: 3D CONSTELLATION NODE NETWORK
+  // 4. STORIES: NEURAL CONSTELLATION MESH
   // ==========================================
   const storiesGroup = new THREE.Group();
   storiesGroup.position.set(3.2, -Y_OFFSET * 3, 0);
 
-  const nodeCount = 30;
-  const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
-  const nodeMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.8 });
+  const netCount = 40;
+  const netGeo = new THREE.BufferGeometry();
+  const netPositions = new Float32Array(netCount * 3);
 
-  for (let i = 0; i < nodeCount; i++) {
-    const node = new THREE.Mesh(nodeGeo, nodeMat);
-    node.position.set((Math.random() - 0.5) * 4.5, (Math.random() - 0.5) * 3.5, (Math.random() - 0.5) * 2);
-    storiesGroup.add(node);
+  for (let i = 0; i < netCount; i++) {
+    netPositions[i * 3] = (Math.random() - 0.5) * 5;
+    netPositions[i * 3 + 1] = (Math.random() - 0.5) * 4;
+    netPositions[i * 3 + 2] = (Math.random() - 0.5) * 2;
   }
+  netGeo.setAttribute('position', new THREE.BufferAttribute(netPositions, 3));
 
-  const networkGeo = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.2, 2));
-  const networkMat = new THREE.LineBasicMaterial({ color: 0x7000ff, transparent: true, opacity: 0.4 });
-  const networkMesh = new THREE.LineSegments(networkGeo, networkMat);
-  storiesGroup.add(networkMesh);
+  const netPoints = new THREE.Points(
+    netGeo,
+    new THREE.PointsMaterial({ size: 0.08, color: 0x00f2fe, transparent: true, opacity: 0.9 })
+  );
+  storiesGroup.add(netPoints);
+
+  const netWireMesh = new THREE.LineSegments(
+    new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.3, 2)),
+    new THREE.LineBasicMaterial({ color: 0x9d4edd, transparent: true, opacity: 0.35 })
+  );
+  storiesGroup.add(netWireMesh);
 
   scene.add(storiesGroup);
 
   // ==========================================
-  // 5. ABOUT: CYBER EYE WITH CURSOR TRACKING
+  // 5. ABOUT: BIOMETRIC CYBER EYE ASSEMBLY
   // ==========================================
   const aboutGroup = new THREE.Group();
   aboutGroup.position.set(3.2, -Y_OFFSET * 4, 0);
 
-  const eyeBaseGeo = new THREE.SphereGeometry(1.6, 32, 32);
-  const eyeBaseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 });
-  const eyeBase = new THREE.Mesh(eyeBaseGeo, eyeBaseMat);
-  aboutGroup.add(eyeBase);
+  const eyeCasing = new THREE.Mesh(
+    new THREE.SphereGeometry(1.6, 32, 32),
+    new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.9, roughness: 0.2 })
+  );
+  aboutGroup.add(eyeCasing);
 
   const irisGroup = new THREE.Group();
-  irisGroup.position.z = 1.4;
+  irisGroup.position.z = 1.35;
 
-  const outerIrisGeo = new THREE.TorusGeometry(0.6, 0.04, 16, 100);
-  const outerIrisMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.9 });
-  const outerIris = new THREE.Mesh(outerIrisGeo, outerIrisMat);
-  irisGroup.add(outerIris);
+  const apertureRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.65, 0.05, 16, 100),
+    new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 1.0 })
+  );
+  irisGroup.add(apertureRing);
 
-  const pupilGeo = new THREE.SphereGeometry(0.35, 32, 32);
-  const pupilMat = new THREE.MeshStandardMaterial({ color: 0x7000ff, emissive: 0x7000ff, emissiveIntensity: 1.0 });
-  const pupil = new THREE.Mesh(pupilGeo, pupilMat);
-  irisGroup.add(pupil);
+  const glowingPupil = new THREE.Mesh(
+    new THREE.SphereGeometry(0.38, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x9d4edd })
+  );
+  irisGroup.add(glowingPupil);
 
   aboutGroup.add(irisGroup);
   scene.add(aboutGroup);
 
   // ==========================================
-  // 6. CONTACT: GLASS CHAT BUBBLE ICON
+  // 6. CONTACT: GLASS HOLOGRAPHIC COMMUNICATOR
   // ==========================================
   const contactGroup = new THREE.Group();
   contactGroup.position.set(3.2, -Y_OFFSET * 5, 0);
 
-  const bubbleGeo = new THREE.SphereGeometry(1.3, 32, 32);
-  bubbleGeo.scale(1.2, 1.0, 0.7);
-  const bubbleMat = new THREE.MeshPhysicalMaterial({ 
-    color: 0x00f2fe, 
-    metalness: 0.1, 
-    roughness: 0.1, 
-    transmission: 0.6, 
-    thickness: 1.2, 
-    emissive: 0x00f2fe,
-    emissiveIntensity: 0.3
-  });
-  const bubble = new THREE.Mesh(bubbleGeo, bubbleMat);
-  contactGroup.add(bubble);
+  const commOrb = new THREE.Mesh(
+    new THREE.SphereGeometry(1.2, 32, 32),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x00f2fe, metalness: 0.1, roughness: 0.05, transmission: 0.9, thickness: 1.5, emissive: 0x00f2fe, emissiveIntensity: 0.2
+    })
+  );
+  contactGroup.add(commOrb);
 
-  const phoneGeo = new THREE.TorusGeometry(0.4, 0.12, 16, 32, Math.PI * 0.8);
-  const phoneMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.9, roughness: 0.1 });
-  const phone = new THREE.Mesh(phoneGeo, phoneMat);
-  phone.position.z = 0.5;
-  contactGroup.add(phone);
+  const signalRing = new THREE.Mesh(
+    new THREE.TorusGeometry(1.8, 0.02, 16, 100),
+    new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.7 })
+  );
+  signalRing.rotation.x = Math.PI / 2.5;
+  contactGroup.add(signalRing);
+
+  const innerSymbol = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.5, 0),
+    new THREE.MeshStandardMaterial({ color: 0x9d4edd, emissive: 0x9d4edd, emissiveIntensity: 1.0, wireframe: true })
+  );
+  contactGroup.add(innerSymbol);
 
   scene.add(contactGroup);
 
   // ==========================================
-  // ANIMATION & CURSOR TRACKING LOOP
+  // ANIMATION LOOP
   // ==========================================
   let scrollY = 0;
   window.addEventListener('scroll', () => {
@@ -279,62 +300,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const clock = new THREE.Clock();
 
-  function animate() {
+  function renderLoop() {
     const elapsed = clock.getElapsedTime();
 
-    // Lerp smooth mouse movement
-    mouseX += (targetMouseX - mouseX) * 0.08;
-    mouseY += (targetMouseY - mouseY) * 0.08;
+    mouseX += (targetMouseX - mouseX) * 0.06;
+    mouseY += (targetMouseY - mouseY) * 0.06;
 
-    // Smooth camera scroll transition
     camera.position.y = -scrollY * Y_OFFSET;
 
-    // 1. Hero Core CW Logo Rotation & Pulse
-    coreIco.rotation.y = elapsed * 0.4;
-    coreIco.rotation.x = elapsed * 0.2;
-    innerCore.rotation.y = elapsed * 0.5;
-    innerCore.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.05);
-    ring1.rotation.z = elapsed * 0.3;
-    ring2.rotation.z = -elapsed * 0.3;
-    heroGroup.rotation.y = mouseX * 0.5;
-    heroGroup.rotation.x = -mouseY * 0.5;
+    // Hero
+    cwCore.rotation.y = elapsed * 0.4;
+    cage.rotation.y = -elapsed * 0.2;
+    cage.rotation.x = elapsed * 0.1;
+    gyroRing1.rotation.z = elapsed * 0.3;
+    gyroRing2.rotation.z = -elapsed * 0.2;
+    shards.forEach((s) => {
+      s.angle += s.speed;
+      s.mesh.position.x = Math.cos(s.angle) * 2.2;
+      s.mesh.position.z = Math.sin(s.angle) * 2.2;
+      s.mesh.rotation.x += 0.01;
+    });
+    heroGroup.rotation.y = mouseX * 0.4;
+    heroGroup.rotation.x = -mouseY * 0.3;
 
-    // 2. Courses Matrix Animation & Tilt
-    updateMatrixCode();
-    coursesGroup.rotation.y = mouseX * 0.4;
-    coursesGroup.rotation.x = -mouseY * 0.3;
+    // Courses
+    drawCodeStream();
+    coursesGroup.rotation.y = mouseX * 0.35;
+    coursesGroup.rotation.x = -mouseY * 0.25;
 
-    // 3. Dashboard Real-Time Bars
-    const positions = lineGraph.geometry.attributes.position.array;
-    bars.forEach((bar, index) => {
-      const h = Math.sin(elapsed * 3 + index) * 0.9 + 1.3;
+    // Dashboard
+    const chartLinePos = chartLine.geometry.attributes.position.array;
+    glassBars.forEach((bar, index) => {
+      const h = Math.sin(elapsed * 2.5 + index) * 0.85 + 1.25;
       bar.scale.y = h;
       bar.position.y = h / 2 - 0.5;
-      positions[index * 3 + 1] = h;
+      chartLinePos[index * 3 + 1] = h;
     });
-    lineGraph.geometry.attributes.position.needsUpdate = true;
-    dashboardGroup.rotation.y = mouseX * 0.4;
-    dashboardGroup.rotation.x = -mouseY * 0.3;
+    chartLine.geometry.attributes.position.needsUpdate = true;
+    dashboardGroup.rotation.y = mouseX * 0.35;
+    dashboardGroup.rotation.x = -mouseY * 0.25;
 
-    // 4. Stories Network Rotation
-    networkMesh.rotation.y = elapsed * 0.2;
-    storiesGroup.rotation.y = mouseX * 0.5;
-    storiesGroup.rotation.x = -mouseY * 0.4;
+    // Stories
+    netWireMesh.rotation.y = elapsed * 0.15;
+    storiesGroup.rotation.y = mouseX * 0.4;
+    storiesGroup.rotation.x = -mouseY * 0.3;
 
-    // 5. About Eye Mouse Tracking
-    aboutGroup.rotation.y = mouseX * 0.7;
-    aboutGroup.rotation.x = -mouseY * 0.5;
+    // About Eye Tracking
+    aboutGroup.rotation.y = mouseX * 0.65;
+    aboutGroup.rotation.x = -mouseY * 0.45;
+    apertureRing.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.05);
 
-    // 6. Contact Chat Floating
-    contactGroup.position.y = -Y_OFFSET * 5 + Math.sin(elapsed * 2) * 0.15;
-    contactGroup.rotation.y = mouseX * 0.6;
-    contactGroup.rotation.x = -mouseY * 0.4;
+    // Contact
+    commOrb.position.y = Math.sin(elapsed * 1.8) * 0.12;
+    innerSymbol.rotation.y = elapsed * 0.8;
+    signalRing.rotation.z = elapsed * 0.4;
+    contactGroup.rotation.y = mouseX * 0.4;
+    contactGroup.rotation.x = -mouseY * 0.3;
 
     renderer.render(scene, camera);
-    requestAnimationFrame(animate);
+    requestAnimationFrame(renderLoop);
   }
 
-  animate();
+  renderLoop();
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
