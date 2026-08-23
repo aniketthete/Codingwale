@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodingWale | Transmission Center</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <canvas id="webgl-canvas"></canvas>
+
+  <nav class="navbar">
+    <div class="logo">
+      <span class="logo-icon"></span>
+      <span class="logo-text">CodingWale</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="stories.html">Stories</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+    </ul>
+    <button class="cta-button">Explore Matrix</button>
+  </nav>
+
+  <main class="page-container">
+    <header class="page-header">
+      <span class="badge">Transmission Center</span>
+      <h1>Initiate <span class="gradient-text">Contact</span></h1>
+      <p>Connect with our technical advisors or enterprise training team.</p>
+    </header>
+
+    <div class="contact-card glass-card">
+      <form id="contact-form">
+        <input type="text" placeholder="Your Name" required class="form-input">
+        <input type="email" placeholder="Your Email" required class="form-input">
+        <textarea placeholder="Your Transmission Message..." rows="5" required class="form-input"></textarea>
+        <button type="submit" class="action-btn">Transmit Signal</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script src="models-3d.js"></script>
+</body>
+</html>
