@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodingWale | Engineer Stories</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <canvas id="webgl-canvas"></canvas>
+
+  <nav class="navbar">
+    <div class="logo">
+      <span class="logo-icon"></span>
+      <span class="logo-text">CodingWale</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="stories.html" class="active">Stories</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="cta-button">Explore Matrix</button>
+  </nav>
+
+  <main class="page-container">
+    <header class="page-header">
+      <span class="badge">Community Chronicles</span>
+      <h1>Architect <span class="gradient-text">Stories</span></h1>
+      <p>Breakthroughs, system redesigns, and scaling post-mortems from the field.</p>
+    </header>
+
+    <div class="grid-layout">
+      <div class="glass-card">
+        <div class="card-tag">Post-Mortem</div>
+        <h3>Scaling to 10M Concurrency</h3>
+        <p>How our alumni re-architected event streaming pipelines to reduce latency under peak loads.</p>
+        <div class="card-meta"><span>By Alex R.</span><span>5 min read</span></div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-tag">AI Stack</div>
+        <h3>Deploying On-Prem RAG</h3>
+        <p>A step-by-step breakdown on running local models with low-latency vector indices.</p>
+        <div class="card-meta"><span>By Maya K.</span><span>8 min read</span></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script src="models-3d.js"></script>
+</body>
+</html>
