@@ -4,214 +4,247 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Scene Setup
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 7);
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 8);
 
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-  // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+  // Lighting System
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
   scene.add(ambientLight);
 
-  const cyanLight = new THREE.PointLight(0x00f2fe, 3, 20);
-  cyanLight.position.set(4, 4, 4);
+  const cyanLight = new THREE.PointLight(0x00f2fe, 5, 25);
+  cyanLight.position.set(5, 5, 5);
   scene.add(cyanLight);
 
-  const purpleLight = new THREE.PointLight(0x7000ff, 3, 20);
-  purpleLight.position.set(-4, -4, 2);
+  const purpleLight = new THREE.PointLight(0x7000ff, 5, 25);
+  purpleLight.position.set(-5, -5, 3);
   scene.add(purpleLight);
 
-  // Y-offsets for each section along the scroll path
   const Y_OFFSET = 12;
 
+  // Global Mouse Cursor Tracking Logic
+  let mouseX = 0, mouseY = 0;
+  let targetMouseX = 0, targetMouseY = 0;
+
+  window.addEventListener('mousemove', (e) => {
+    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
   // ==========================================
-  // 1. HERO: MULTI-TIERED HOLOGRAPHIC CORE
+  // 1. HERO: PREMIUM HOLOGRAPHIC HYPER-CORE
   // ==========================================
   const heroGroup = new THREE.Group();
   heroGroup.position.set(3.2, 0, 0);
 
-  const sphereGeo = new THREE.SphereGeometry(1.0, 24, 24);
-  const sphereMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true, transparent: true, opacity: 0.35 });
-  
-  const topSphere = new THREE.Mesh(sphereGeo, sphereMat);
-  topSphere.position.y = 0.6;
-  heroGroup.add(topSphere);
-
-  const bottomSphere = new THREE.Mesh(sphereGeo, sphereMat);
-  bottomSphere.position.y = -0.6;
-  heroGroup.add(bottomSphere);
-
-  const cylGeo = new THREE.CylinderGeometry(1.3, 1.3, 1.0, 32, 8, true);
-  const cylMat = new THREE.MeshBasicMaterial({ color: 0x7000ff, wireframe: true, transparent: true, opacity: 0.5 });
-  const midCylinder = new THREE.Mesh(cylGeo, cylMat);
-  heroGroup.add(midCylinder);
-
-  const ringGeo1 = new THREE.TorusGeometry(2.0, 0.02, 16, 100);
-  const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.6 });
-  const outerRing1 = new THREE.Mesh(ringGeo1, ringMat1);
-  outerRing1.rotation.x = Math.PI / 2.3;
-  heroGroup.add(outerRing1);
-
-  const panelGeo = new THREE.PlaneGeometry(0.6, 0.8);
-  const panelMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
-  const panels = [];
-  for (let i = 0; i < 4; i++) {
-    const angle = (i / 4) * Math.PI * 2;
-    const panel = new THREE.Mesh(panelGeo, panelMat);
-    panel.position.set(Math.cos(angle) * 2.6, 0, Math.sin(angle) * 2.6);
-    panel.rotation.y = -angle + Math.PI / 2;
-    heroGroup.add(panel);
-    panels.push({ mesh: panel, angle: angle });
+  // Outer Glowing Particle Swarm
+  const particleGeo = new THREE.BufferGeometry();
+  const particleCount = 200;
+  const posArray = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount * 3; i++) {
+    posArray[i] = (Math.random() - 0.5) * 6;
   }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+  const particleMat = new THREE.PointsMaterial({ size: 0.04, color: 0x00f2fe, transparent: true, opacity: 0.8 });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  heroGroup.add(particles);
+
+  // Central Icosahedron Core
+  const icoGeo = new THREE.IcosahedronGeometry(1.2, 1);
+  const icoMat = new THREE.MeshStandardMaterial({ 
+    color: 0x030712, 
+    wireframe: true, 
+    emissive: 0x00f2fe, 
+    emissiveIntensity: 0.6,
+    metalness: 0.9,
+    roughness: 0.1
+  });
+  const coreIco = new THREE.Mesh(icoGeo, icoMat);
+  heroGroup.add(coreIco);
+
+  // Inner Core Sphere
+  const innerGeo = new THREE.SphereGeometry(0.7, 32, 32);
+  const innerMat = new THREE.MeshStandardMaterial({ color: 0x7000ff, emissive: 0x7000ff, emissiveIntensity: 0.8, roughness: 0.2 });
+  const innerCore = new THREE.Mesh(innerGeo, innerMat);
+  heroGroup.add(innerCore);
+
+  // Torus Rings
+  const ringGeo = new THREE.TorusGeometry(2.2, 0.03, 16, 100);
+  const ringMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.5 });
+  const ring1 = new THREE.Mesh(ringGeo, ringMat);
+  ring1.rotation.x = Math.PI / 3;
+  heroGroup.add(ring1);
+
+  const ring2 = new THREE.Mesh(ringGeo, ringMat);
+  ring2.rotation.x = -Math.PI / 3;
+  heroGroup.add(ring2);
+
   scene.add(heroGroup);
 
   // ==========================================
-  // 2. COURSES: 3D LCD MONITOR (BINARY CODE)
+  // 2. COURSES: CURVED CURVED MONITOR & CODE
   // ==========================================
   const coursesGroup = new THREE.Group();
   coursesGroup.position.set(3.2, -Y_OFFSET, 0);
 
-  // Monitor Frame & Stand
-  const frameGeo = new THREE.BoxGeometry(3.2, 2.0, 0.15);
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
-  const monitorFrame = new THREE.Mesh(frameGeo, frameMat);
-  coursesGroup.add(monitorFrame);
+  const monitorGeo = new THREE.BoxGeometry(3.6, 2.2, 0.15);
+  const monitorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1 });
+  const monitor = new THREE.Mesh(monitorGeo, monitorMat);
+  coursesGroup.add(monitor);
 
-  const standGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.8, 16);
-  const stand = new THREE.Mesh(standGeo, frameMat);
-  stand.position.set(0, -1.2, 0);
-  coursesGroup.add(stand);
-
-  const baseGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.08, 32);
-  const base = new THREE.Mesh(baseGeo, frameMat);
-  base.position.set(0, -1.6, 0);
-  coursesGroup.add(base);
-
-  // Matrix Canvas Screen Texture
   const codeCanvas = document.createElement('canvas');
   codeCanvas.width = 512;
   codeCanvas.height = 320;
   const ctx = codeCanvas.getContext('2d');
   const codeTexture = new THREE.CanvasTexture(codeCanvas);
 
-  const screenGeo = new THREE.PlaneGeometry(3.0, 1.8);
+  const screenGeo = new THREE.PlaneGeometry(3.4, 2.0);
   const screenMat = new THREE.MeshBasicMaterial({ map: codeTexture });
   const screenMesh = new THREE.Mesh(screenGeo, screenMat);
   screenMesh.position.z = 0.09;
   coursesGroup.add(screenMesh);
-  scene.add(coursesGroup);
 
-  const columns = Array(32).fill(0);
-
-  function drawMatrixCode() {
+  const matrixCols = Array(32).fill(0);
+  function updateMatrixCode() {
     ctx.fillStyle = 'rgba(3, 7, 18, 0.2)';
     ctx.fillRect(0, 0, codeCanvas.width, codeCanvas.height);
     ctx.fillStyle = '#00f2fe';
-    ctx.font = '14px monospace';
+    ctx.font = 'bold 15px monospace';
 
-    columns.forEach((y, index) => {
-      const text = Math.random() > 0.5 ? '1' : '0';
-      const x = index * 16;
-      ctx.fillText(text, x, y);
-      if (y > 320 + Math.random() * 10000) columns[index] = 0;
-      else columns[index] = y + 16;
+    matrixCols.forEach((y, i) => {
+      const char = String.fromCharCode(0x30A0 + Math.random() * 96);
+      ctx.fillText(char, i * 16, y);
+      if (y > 320 + Math.random() * 10000) matrixCols[i] = 0;
+      else matrixCols[i] = y + 16;
     });
     codeTexture.needsUpdate = true;
   }
+  scene.add(coursesGroup);
 
   // ==========================================
-  // 3. DASHBOARD: 3D LIVE GRAPH ANIMATION
+  // 3. DASHBOARD: 3D GRAPH WITH LINE NODE
   // ==========================================
   const dashboardGroup = new THREE.Group();
   dashboardGroup.position.set(3.2, -Y_OFFSET * 2, 0);
 
-  const barCount = 7;
   const bars = [];
+  const barCount = 6;
+  const linePoints = [];
+
   for (let i = 0; i < barCount; i++) {
-    const barGeo = new THREE.BoxGeometry(0.3, 1, 0.3);
+    const barGeo = new THREE.BoxGeometry(0.35, 1, 0.35);
     const barMat = new THREE.MeshStandardMaterial({ 
-      color: i % 2 === 0 ? 0x00f2fe : 0x7000ff, 
-      roughness: 0.3, 
-      metalness: 0.7 
+      color: 0x00f2fe, 
+      roughness: 0.2, 
+      metalness: 0.8,
+      emissive: 0x00f2fe,
+      emissiveIntensity: 0.2
     });
     const bar = new THREE.Mesh(barGeo, barMat);
-    bar.position.x = (i - barCount / 2) * 0.55;
+    bar.position.x = (i - barCount / 2) * 0.6;
     dashboardGroup.add(bar);
     bars.push(bar);
+
+    linePoints.push(new THREE.Vector3(bar.position.x, 1, 0));
   }
+
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x7000ff, linewidth: 3 });
+  const lineGraph = new THREE.Line(lineGeo, lineMat);
+  dashboardGroup.add(lineGraph);
+
   scene.add(dashboardGroup);
 
   // ==========================================
-  // 4. STORIES: VECTOR LINE NETWORK GRID
+  // 4. STORIES: 3D CONSTELLATION NODE NETWORK
   // ==========================================
   const storiesGroup = new THREE.Group();
   storiesGroup.position.set(3.2, -Y_OFFSET * 3, 0);
 
-  const gridGeo = new THREE.WireframeGeometry(new THREE.PlaneGeometry(5, 4, 12, 10));
-  const gridMat = new THREE.LineBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.6 });
-  const vectorGrid = new THREE.LineSegments(gridGeo, gridMat);
-  storiesGroup.add(vectorGrid);
+  const nodeCount = 30;
+  const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+  const nodeMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.8 });
+  const nodes = [];
+
+  for (let i = 0; i < nodeCount; i++) {
+    const node = new THREE.Mesh(nodeGeo, nodeMat);
+    node.position.set((Math.random() - 0.5) * 4.5, (Math.random() - 0.5) * 3.5, (Math.random() - 0.5) * 2);
+    storiesGroup.add(node);
+    nodes.push(node);
+  }
+
+  const networkGeo = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.2, 2));
+  const networkMat = new THREE.LineBasicMaterial({ color: 0x7000ff, transparent: true, opacity: 0.4 });
+  const networkMesh = new THREE.LineSegments(networkGeo, networkMat);
+  storiesGroup.add(networkMesh);
+
   scene.add(storiesGroup);
 
   // ==========================================
-  // 5. ABOUT: CYBERNETIC 3D EYE
+  // 5. ABOUT: CYBER EYE WITH ACTIVE CURSOR TRACKING
   // ==========================================
   const aboutGroup = new THREE.Group();
   aboutGroup.position.set(3.2, -Y_OFFSET * 4, 0);
 
-  // Sclera Wireframe Sphere
-  const eyeSphereGeo = new THREE.SphereGeometry(1.5, 20, 20);
-  const eyeSphereMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true, transparent: true, opacity: 0.4 });
-  const eyeSphere = new THREE.Mesh(eyeSphereGeo, eyeSphereMat);
-  aboutGroup.add(eyeSphere);
+  const eyeBaseGeo = new THREE.SphereGeometry(1.6, 32, 32);
+  const eyeBaseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 });
+  const eyeBase = new THREE.Mesh(eyeBaseGeo, eyeBaseMat);
+  aboutGroup.add(eyeBase);
 
-  // Iris & Pupil Concentric Rings
-  const irisGeo = new THREE.RingGeometry(0.2, 0.8, 32);
-  const irisMat = new THREE.MeshBasicMaterial({ color: 0x7000ff, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-  const iris = new THREE.Mesh(irisGeo, irisMat);
-  iris.position.z = 1.35;
-  aboutGroup.add(iris);
+  const irisGroup = new THREE.Group();
+  irisGroup.position.z = 1.4;
 
-  const pupilGeo = new THREE.CircleGeometry(0.3, 32);
-  const pupilMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
+  const outerIrisGeo = new THREE.TorusGeometry(0.6, 0.04, 16, 100);
+  const outerIrisMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.9 });
+  const outerIris = new THREE.Mesh(outerIrisGeo, outerIrisMat);
+  irisGroup.add(outerIris);
+
+  const pupilGeo = new THREE.SphereGeometry(0.35, 32, 32);
+  const pupilMat = new THREE.MeshStandardMaterial({ color: 0x7000ff, emissive: 0x7000ff, emissiveIntensity: 1.0 });
   const pupil = new THREE.Mesh(pupilGeo, pupilMat);
-  pupil.position.z = 1.38;
-  aboutGroup.add(pupil);
+  irisGroup.add(pupil);
+
+  aboutGroup.add(irisGroup);
   scene.add(aboutGroup);
 
   // ==========================================
-  // 6. CONTACT: 3D CHAT BUBBLE / PHONE ICON
+  // 6. CONTACT: METALLIC GLASS CHAT ICON
   // ==========================================
   const contactGroup = new THREE.Group();
   contactGroup.position.set(3.2, -Y_OFFSET * 5, 0);
 
-  const bubbleGeo = new THREE.SphereGeometry(1.4, 32, 32);
-  bubbleGeo.scale(1.2, 1.0, 0.8);
-  const bubbleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, roughness: 0.2, metalness: 0.5 });
-  const chatBubble = new THREE.Mesh(bubbleGeo, bubbleMat);
-  contactGroup.add(chatBubble);
+  const bubbleGeo = new THREE.SphereGeometry(1.3, 32, 32);
+  bubbleGeo.scale(1.2, 1.0, 0.7);
+  const bubbleMat = new THREE.MeshPhysicalMaterial({ 
+    color: 0x00f2fe, 
+    metalness: 0.1, 
+    roughness: 0.1, 
+    transmission: 0.6, 
+    thickness: 1.2, 
+    emissive: 0x00f2fe,
+    emissiveIntensity: 0.3
+  });
+  const bubble = new THREE.Mesh(bubbleGeo, bubbleMat);
+  contactGroup.add(bubble);
 
-  const tailGeo = new THREE.ConeGeometry(0.5, 0.8, 3);
-  const tail = new THREE.Mesh(tailGeo, bubbleMat);
-  tail.position.set(-1.0, -1.0, 0);
-  tail.rotation.z = Math.PI / 4;
-  contactGroup.add(tail);
+  const phoneGeo = new THREE.TorusGeometry(0.4, 0.12, 16, 32, Math.PI * 0.8);
+  const phoneMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.9, roughness: 0.1 });
+  const phone = new THREE.Mesh(phoneGeo, phoneMat);
+  phone.position.z = 0.5;
+  contactGroup.add(phone);
+
   scene.add(contactGroup);
 
   // ==========================================
-  // SCROLL & RENDER ANIMATION LOOP
+  // ANIMATION & CURSOR TRACKING LOOP
   // ==========================================
   let scrollY = 0;
   window.addEventListener('scroll', () => {
     scrollY = window.scrollY / window.innerHeight;
-  });
-
-  let mouseX = 0, mouseY = 0;
-  window.addEventListener('mousemove', (e) => {
-    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
   const clock = new THREE.Clock();
@@ -219,42 +252,52 @@ document.addEventListener('DOMContentLoaded', () => {
   function animate() {
     const elapsed = clock.getElapsedTime();
 
-    // Smoothly update camera scroll position
+    // Lerp smooth mouse movement
+    mouseX += (targetMouseX - mouseX) * 0.08;
+    mouseY += (targetMouseY - mouseY) * 0.08;
+
+    // Smooth camera scroll transition
     camera.position.y = -scrollY * Y_OFFSET;
 
-    // 1. Hero Animations
-    topSphere.rotation.y = elapsed * 0.3;
-    bottomSphere.rotation.y = -elapsed * 0.3;
-    midCylinder.rotation.y = elapsed * 0.15;
-    outerRing1.rotation.z = elapsed * 0.2;
-    panels.forEach((p) => {
-      p.angle += 0.005;
-      p.mesh.position.x = Math.cos(p.angle) * 2.6;
-      p.mesh.position.z = Math.sin(p.angle) * 2.6;
-      p.mesh.rotation.y = -p.angle + Math.PI / 2;
-    });
+    // 1. Hero Dynamic Rotation + Cursor Response
+    coreIco.rotation.y = elapsed * 0.4;
+    coreIco.rotation.x = elapsed * 0.2;
+    innerCore.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.08);
+    ring1.rotation.z = elapsed * 0.3;
+    ring2.rotation.z = -elapsed * 0.3;
+    heroGroup.rotation.y = mouseX * 0.5;
+    heroGroup.rotation.x = -mouseY * 0.5;
 
-    // 2. Courses Animations
-    drawMatrixCode();
-    coursesGroup.rotation.y = Math.sin(elapsed * 0.5) * 0.15;
+    // 2. Courses Cursor Rotation & Matrix Screen Update
+    updateMatrixCode();
+    coursesGroup.rotation.y = mouseX * 0.4;
+    coursesGroup.rotation.x = -mouseY * 0.3;
 
-    // 3. Dashboard Animations (Dynamic Bar Heights)
+    // 3. Dashboard Real-Time Bars & Cursor Response
+    const positions = lineGraph.geometry.attributes.position.array;
     bars.forEach((bar, index) => {
-      const scale = Math.sin(elapsed * 2 + index) * 0.8 + 1.2;
-      bar.scale.y = scale;
-      bar.position.y = scale / 2 - 0.5;
+      const h = Math.sin(elapsed * 3 + index) * 0.9 + 1.3;
+      bar.scale.y = h;
+      bar.position.y = h / 2 - 0.5;
+      positions[index * 3 + 1] = h;
     });
+    lineGraph.geometry.attributes.position.needsUpdate = true;
+    dashboardGroup.rotation.y = mouseX * 0.4;
+    dashboardGroup.rotation.x = -mouseY * 0.3;
 
-    // 4. Stories Animations
-    vectorGrid.rotation.z = elapsed * 0.1;
+    // 4. Stories Constellation Motion
+    networkMesh.rotation.y = elapsed * 0.2;
+    storiesGroup.rotation.y = mouseX * 0.5;
+    storiesGroup.rotation.x = -mouseY * 0.4;
 
-    // 5. About Eye Tracking Mouse
-    aboutGroup.rotation.y = mouseX * 0.4;
-    aboutGroup.rotation.x = -mouseY * 0.3;
+    // 5. About Eye Cursor Tracking
+    aboutGroup.rotation.y = mouseX * 0.7;
+    aboutGroup.rotation.x = -mouseY * 0.5;
 
-    // 6. Contact Icon Floating
-    contactGroup.position.y = -Y_OFFSET * 5 + Math.sin(elapsed * 2) * 0.2;
-    contactGroup.rotation.y = elapsed * 0.5;
+    // 6. Contact Chat Floating & Tilt
+    contactGroup.position.y = -Y_OFFSET * 5 + Math.sin(elapsed * 2) * 0.15;
+    contactGroup.rotation.y = mouseX * 0.6;
+    contactGroup.rotation.x = -mouseY * 0.4;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
