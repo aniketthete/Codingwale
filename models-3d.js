@@ -1,20 +1,17 @@
-// CodingWale Three.js 3D Engine Architecture
+// CodingWale 3D Model Loader
 const canvas = document.getElementById('webgl-canvas');
 
 if (canvas) {
-  // Scene Setup
   const scene = new THREE.Scene();
 
-  // Camera Setup
   const camera = new THREE.PerspectiveCamera(
     60,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.z = 7;
+  camera.position.set(0, 0, 5);
 
-  // Renderer Setup
   const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
     alpha: true,
@@ -23,69 +20,51 @@ if (canvas) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Outer Wireframe Icosahedron (The Core Matrix)
-  const coreGeometry = new THREE.IcosahedronGeometry(2.5, 2);
-  const coreMaterial = new THREE.MeshBasicMaterial({
-    color: 0x00f2fe,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.35
-  });
-  const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
-  scene.add(coreMesh);
+  // Studio Lighting setup for realistic 3D materials
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+  scene.add(ambientLight);
 
-  // Inner Glowing Nucleus
-  const innerGeometry = new THREE.IcosahedronGeometry(1.2, 1);
-  const innerMaterial = new THREE.MeshBasicMaterial({
-    color: 0x7000ff,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.6
-  });
-  const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
-  scene.add(innerMesh);
+  const cyanLight = new THREE.DirectionalLight(0x00f2fe, 3);
+  cyanLight.position.set(5, 5, 5);
+  scene.add(cyanLight);
 
-  // Orbiting Particle Nodes
-  const particleCount = 120;
-  const particlesGeometry = new THREE.BufferGeometry();
-  const positions = new Float32Array(particleCount * 3);
+  const purpleLight = new THREE.DirectionalLight(0x7000ff, 2);
+  purpleLight.position.set(-5, -5, -2);
+  scene.add(purpleLight);
 
-  for (let i = 0; i < particleCount * 3; i += 3) {
-    positions[i] = (Math.random() - 0.5) * 12;
-    positions[i + 1] = (Math.random() - 0.5) * 12;
-    positions[i + 2] = (Math.random() - 0.5) * 12;
-  }
+  // Load the Custom GLB Model
+  let laptopModel;
+  const loader = new THREE.GLTFLoader();
 
-  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  // Make sure the filename below matches your uploaded file name exactly!
+  loader.load('laptop.glb', (gltf) => {
+    laptopModel = gltf.scene;
 
-  const particlesMaterial = new THREE.PointsMaterial({
-    color: 0x00f2fe,
-    size: 0.05,
-    transparent: true,
-    opacity: 0.8
+    // Adjust scale and position to fit the hero layout
+    laptopModel.scale.set(1.5, 1.5, 1.5);
+    laptopModel.rotation.x = 0.3; // Tilt slightly forward
+    
+    if (window.innerWidth > 900) {
+      laptopModel.position.set(2, -0.5, 0);
+    } else {
+      laptopModel.position.set(0, -1, 0);
+    }
+
+    scene.add(laptopModel);
+  }, undefined, (error) => {
+    console.error('Error loading 3D model:', error);
   });
 
-  const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
-  scene.add(particleSystem);
-
-  // Repositioning 3D object for hero layout on desktop
-  if (window.innerWidth > 900) {
-    coreMesh.position.x = 2;
-    innerMesh.position.x = 2;
-  }
-
-  // Mouse Parallax Interaction
+  // Mouse Parallax Effect
   let mouseX = 0;
   let mouseY = 0;
-  let targetX = 0;
-  let targetY = 0;
 
   window.addEventListener('mousemove', (e) => {
     mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
     mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
-  // Scroll Interaction
+  // Scroll Position
   let scrollY = 0;
   window.addEventListener('scroll', () => {
     scrollY = window.scrollY;
@@ -97,21 +76,12 @@ if (canvas) {
   function animate() {
     const elapsedTime = clock.getElapsedTime();
 
-    targetX += (mouseX - targetX) * 0.05;
-    targetY += (mouseY - targetY) * 0.05;
-
-    // Smooth Rotations
-    coreMesh.rotation.y = elapsedTime * 0.15 + targetX * 0.5;
-    coreMesh.rotation.x = elapsedTime * 0.10 + targetY * 0.5;
-
-    innerMesh.rotation.y = -elapsedTime * 0.25;
-    innerMesh.rotation.x = -elapsedTime * 0.20;
-
-    particleSystem.rotation.y = elapsedTime * 0.05;
-
-    // Subtle position shift based on scroll
-    coreMesh.position.y = -scrollY * 0.001;
-    innerMesh.position.y = -scrollY * 0.001;
+    if (laptopModel) {
+      // Gentle floating motion + hover response
+      laptopModel.rotation.y = elapsedTime * 0.3 + (mouseX * 0.3);
+      laptopModel.rotation.x = 0.2 + (mouseY * 0.2);
+      laptopModel.position.y = Math.sin(elapsedTime * 1.5) * 0.1 - (scrollY * 0.001);
+    }
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -119,7 +89,7 @@ if (canvas) {
 
   animate();
 
-  // Window Resize Listener
+  // Window Resize Handling
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -127,12 +97,12 @@ if (canvas) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    if (window.innerWidth > 900) {
-      coreMesh.position.x = 2;
-      innerMesh.position.x = 2;
-    } else {
-      coreMesh.position.x = 0;
-      innerMesh.position.x = 0;
+    if (laptopModel) {
+      if (window.innerWidth > 900) {
+        laptopModel.position.x = 2;
+      } else {
+        laptopModel.position.x = 0;
+      }
     }
   });
 }
