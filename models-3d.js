@@ -40,14 +40,14 @@ if (canvas) {
   loader.load('laptop.glb', (gltf) => {
     laptopModel = gltf.scene;
 
-    // Adjust scale and position to fit the hero layout
-    laptopModel.scale.set(1.5, 1.5, 1.5);
+  // Adjust scale and position to fit the hero layout
+    laptopModel.scale.set(0.6, 0.6, 0.6); // Reduced size to match matrix dimensions
     laptopModel.rotation.x = 0.3; // Tilt slightly forward
     
     if (window.innerWidth > 900) {
-      laptopModel.position.set(2, -0.5, 0);
+      laptopModel.position.set(2, 0, 0); // Positioned centered in the right hero area
     } else {
-      laptopModel.position.set(0, -1, 0);
+      laptopModel.position.set(0, 0, 0);
     }
 
     scene.add(laptopModel);
