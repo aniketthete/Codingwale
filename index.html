@@ -14,24 +14,103 @@
   <nav class="navbar">
     <div class="logo"><span class="logo-icon"></span><span class="logo-text">CodingWale</span></div>
     <ul class="nav-links">
-      <li><a href="index.html" class="active">Home</a></li>
-      <li><a href="courses.html">Courses</a></li>
-      <li><a href="dashboard.html">Dashboard</a></li>
-      <li><a href="stories.html">Stories</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#courses">Courses</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#stories">Stories</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
     </ul>
     <button class="cta-button">Explore Matrix</button>
   </nav>
 
-  <main class="hero-container">
+  <!-- Hero Section -->
+  <section id="hero" class="scroll-section">
     <div class="hero-content">
       <span class="badge">Next-Gen Architecture</span>
       <h1>Build Systems for <span class="gradient-text">Production Scale</span></h1>
       <p>Hands-on system architecture, distributed networks, and real-time compute environments.</p>
       <button class="action-btn">Launch Environment</button>
     </div>
-  </main>
+  </section>
+
+  <!-- Courses Section (Computer Model Focus) -->
+  <section id="courses" class="scroll-section">
+    <div class="section-content">
+      <span class="badge">Curriculum</span>
+      <h1>Available <span class="gradient-text">Modules</span></h1>
+      <div class="grid-layout">
+        <div class="glass-card">
+          <h3>Distributed Systems</h3>
+          <p>Master high-throughput event streaming and consensus protocols.</p>
+          <button class="action-btn">Enroll Module</button>
+        </div>
+        <div class="glass-card">
+          <h3>System Architecture</h3>
+          <p>Design fault-tolerant backend infrastructure for scale.</p>
+          <button class="action-btn">Enroll Module</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard Section -->
+  <section id="dashboard" class="scroll-section">
+    <div class="section-content">
+      <span class="badge">Telemetry</span>
+      <h1>System <span class="gradient-text">Dashboard</span></h1>
+      <div class="grid-layout">
+        <div class="glass-card">
+          <h3>Active Metrics</h3>
+          <p>Compute Load: Normal | Latency: 12ms</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stories Section -->
+  <section id="stories" class="scroll-section">
+    <div class="section-content">
+      <span class="badge">Chronicles</span>
+      <h1>Engineer <span class="gradient-text">Stories</span></h1>
+      <div class="grid-layout">
+        <div class="glass-card">
+          <h3>Scaling to 10M Concurrency</h3>
+          <p>Architectural breakdown of high-load data pipelines.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="scroll-section">
+    <div class="section-content">
+      <span class="badge">Vision</span>
+      <h1>About <span class="gradient-text">CodingWale</span></h1>
+      <div class="grid-layout">
+        <div class="glass-card">
+          <h3>Our Core Mission</h3>
+          <p>Providing clear, hands-on architectural education.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="scroll-section">
+    <div class="section-content">
+      <span class="badge">Transmission</span>
+      <h1>Get in <span class="gradient-text">Touch</span></h1>
+      <div style="max-width: 500px; margin-top: 20px;">
+        <form id="contact-form" class="glass-card">
+          <input type="text" placeholder="Your Name" required class="form-input">
+          <input type="email" placeholder="Your Email" required class="form-input">
+          <textarea placeholder="Your Message..." rows="4" required class="form-input"></textarea>
+          <button type="submit" class="action-btn" style="width: 100%;">Transmit Signal</button>
+        </form>
+      </div>
+    </div>
+  </section>
 
   <script src="script.js"></script>
   <script src="models-3d.js"></script>
