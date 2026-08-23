@@ -1,4 +1,4 @@
-// CodingWale 3D Engine with Animated Code Screen
+// CodingWale 3D Engine with Interactive Screen Mapping
 const canvas = document.getElementById('webgl-canvas');
 
 if (canvas) {
@@ -20,7 +20,7 @@ if (canvas) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Lighting Setup
+  // Studio Lighting Setup
   const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
   scene.add(ambientLight);
 
@@ -32,7 +32,7 @@ if (canvas) {
   purpleLight.position.set(-5, -5, -2);
   scene.add(purpleLight);
 
-  // Dynamic Dynamic Canvas Texture for Animated Code
+  // Dynamic Canvas Texture for Animated Screen Code
   const codeCanvas = document.createElement('canvas');
   codeCanvas.width = 512;
   codeCanvas.height = 320;
@@ -78,12 +78,22 @@ if (canvas) {
   loader.load('laptop.glb', (gltf) => {
     laptopModel = gltf.scene;
 
-    // Apply code texture to screen material if detected
     laptopModel.traverse((child) => {
-      if (child.isMesh && (child.name.toLowerCase().includes('screen') || child.name.toLowerCase().includes('display'))) {
-        child.material = new THREE.MeshBasicMaterial({
-          map: codeTexture
-        });
+      if (child.isMesh) {
+        console.log("Mesh found in laptop model:", child.name);
+
+        const name = child.name.toLowerCase();
+        if (
+          name.includes('screen') || 
+          name.includes('display') || 
+          name.includes('monitor') || 
+          name.includes('glass') ||
+          name.includes('plane')
+        ) {
+          child.material = new THREE.MeshBasicMaterial({
+            map: codeTexture
+          });
+        }
       }
     });
 
@@ -98,10 +108,31 @@ if (canvas) {
 
     scene.add(laptopModel);
   }, undefined, (error) => {
-    console.error('Error loading 3D model:', error);
+    console.error('Error loading 3D laptop model:', error);
   });
 
-  // Mouse Parallax & Scroll Interaction
+  // Background Ambient Particles
+  const particleCount = 60;
+  const particlesGeometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+
+  for (let i = 0; i < particleCount * 3; i += 3) {
+    positions[i] = (Math.random() - 0.5) * 10;
+    positions[i + 1] = (Math.random() - 0.5) * 10;
+    positions[i + 2] = (Math.random() - 0.5) * 10;
+  }
+
+  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particlesMaterial = new THREE.PointsMaterial({
+    color: 0x00f2fe,
+    size: 0.04,
+    transparent: true,
+    opacity: 0.6
+  });
+  const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
+  scene.add(particleSystem);
+
+  // Mouse Parallax & Scroll Events
   let mouseX = 0;
   let mouseY = 0;
   let scrollY = 0;
@@ -115,7 +146,7 @@ if (canvas) {
     scrollY = window.scrollY;
   });
 
-  // Animation Loop
+  // Render Loop
   const clock = new THREE.Clock();
 
   function animate() {
@@ -129,13 +160,15 @@ if (canvas) {
       laptopModel.position.y = Math.sin(elapsedTime * 1.5) * 0.1 - (scrollY * 0.001);
     }
 
+    particleSystem.rotation.y = elapsedTime * 0.05;
+
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
 
   animate();
 
-  // Resize Listener
+  // Responsive Viewport Resizing
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
