@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodingWale | Architecture Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <canvas id="webgl-canvas"></canvas>
+
+  <nav class="navbar">
+    <div class="logo">
+      <span class="logo-icon"></span>
+      <span class="logo-text">CodingWale</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="stories.html">Stories</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="cta-button">Explore Matrix</button>
+  </nav>
+
+  <main class="page-container">
+    <header class="page-header">
+      <span class="badge">Telemetry Core</span>
+      <h1>System <span class="gradient-text">Dashboard</span></h1>
+      <p>Real-time architectural progress, skill matrices, and active compute environments.</p>
+    </header>
+
+    <div class="grid-layout">
+      <div class="glass-card">
+        <div class="card-tag">Active Status</div>
+        <h3>Progress Metrics</h3>
+        <p>Distributed Systems Architecture: <strong>72% Complete</strong></p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 72%;"></div></div>
+        <p>LLM Infrastructure & RAG: <strong>40% Complete</strong></p>
+        <div class="progress-bar"><div class="progress-fill" style="width: 40%;"></div></div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-tag">Sandbox</div>
+        <h3>Active Environments</h3>
+        <p>Kubernetes Cluster Nodes: <span style="color:#00f2fe;">3 Online</span></p>
+        <p>Vector Database Load: <span style="color:#00ff88;">Nominal</span></p>
+        <button class="action-btn">Launch Terminal</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script src="models-3d.js"></script>
+</body>
+</html>
