@@ -1,371 +1,355 @@
-document.addEventListener('DOMContentLoaded', () => {
+/* =========================================================
+   CodingWale — models-3d.js (Redesigned Cyber System)
+   ========================================================= */
+
+(function () {
   const canvas = document.getElementById('webgl-canvas');
-  if (!canvas || typeof THREE === 'undefined') return;
+  if (!canvas || !window.THREE || !window.WebGLRenderingContext) return;
 
-  // Scene, Camera, Renderer
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 7.5);
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isSmall = window.innerWidth < 720;
 
-  const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+  // Extract CSS Tokens
+  const css = getComputedStyle(document.documentElement);
+  const hex = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  
+  const COLOR = {
+    amber: hex('--amber', '#FF8A3D'),
+    teal: hex('--teal', '#46D8B8'),
+    violet: hex('--violet', '#8C7CFF'),
+    dim: '#2A303C'
+  };
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
+  } catch (e) {
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
 
-  // Lighting System
-  const ambientLight = new THREE.AmbientLight(0x0f172a, 2.5);
-  scene.add(ambientLight);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 9);
 
-  const cyanPoint = new THREE.PointLight(0x00f2fe, 8, 30);
-  cyanPoint.position.set(6, 6, 6);
-  scene.add(cyanPoint);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 
-  const purplePoint = new THREE.PointLight(0x9d4edd, 8, 30);
-  purplePoint.position.set(-6, -6, 4);
-  scene.add(purplePoint);
+  const pointLight1 = new THREE.PointLight(new THREE.Color(COLOR.amber), 3, 20);
+  pointLight1.position.set(5, 5, 5);
+  scene.add(pointLight1);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  dirLight.position.set(0, 10, 10);
-  scene.add(dirLight);
+  const pointLight2 = new THREE.PointLight(new THREE.Color(COLOR.teal), 3, 20);
+  pointLight2.position.set(-5, -5, 3);
+  scene.add(pointLight2);
 
-  const Y_OFFSET = 12;
+  /* ---------------------------------------------------------
+     Layer 1 — Interactive Constellation Field
+     --------------------------------------------------------- */
 
-  // Global Smooth Mouse Interactions
-  let mouseX = 0, mouseY = 0;
-  let targetMouseX = 0, targetMouseY = 0;
+  const NODE_COUNT = isSmall ? 40 : 80;
+  const FIELD = { x: 12, y: 7, z: 5 };
+  const LINK_DIST = isSmall ? 2.5 : 2.8;
 
-  window.addEventListener('mousemove', (e) => {
-    targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-    targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  const nodePositions = [];
+  const nodeVelocities = [];
+  for (let i = 0; i < NODE_COUNT; i++) {
+    nodePositions.push(new THREE.Vector3(
+      (Math.random() - 0.5) * FIELD.x * 2,
+      (Math.random() - 0.5) * FIELD.y * 2,
+      (Math.random() - 0.5) * FIELD.z * 2 - 2
+    ));
+    nodeVelocities.push(new THREE.Vector3(
+      (Math.random() - 0.5) * 0.003,
+      (Math.random() - 0.5) * 0.003,
+      (Math.random() - 0.5) * 0.0015
+    ));
+  }
+
+  const pointsGeo = new THREE.BufferGeometry();
+  const pointsArr = new Float32Array(NODE_COUNT * 3);
+  pointsGeo.setAttribute('position', new THREE.BufferAttribute(pointsArr, 3));
+  const pointsMat = new THREE.PointsMaterial({
+    color: new THREE.Color(COLOR.teal),
+    size: isSmall ? 0.05 : 0.065,
+    transparent: true,
+    opacity: 0.8
   });
+  const points = new THREE.Points(pointsGeo, pointsMat);
+  scene.add(points);
 
-  // Texture Generator for Core CW Logo
+  const MAX_LINE_SEGMENTS = NODE_COUNT * 6;
+  const lineGeo = new THREE.BufferGeometry();
+  const lineArr = new Float32Array(MAX_LINE_SEGMENTS * 2 * 3);
+  lineGeo.setAttribute('position', new THREE.BufferAttribute(lineArr, 3));
+  lineGeo.setDrawRange(0, 0);
+  const lineMat = new THREE.LineBasicMaterial({
+    color: new THREE.Color(COLOR.dim),
+    transparent: true,
+    opacity: 0.3
+  });
+  const lines = new THREE.LineSegments(lineGeo, lineMat);
+  scene.add(lines);
+
+  function updateNetwork() {
+    for (let i = 0; i < NODE_COUNT; i++) {
+      const p = nodePositions[i];
+      const v = nodeVelocities[i];
+      p.add(v);
+      if (Math.abs(p.x) > FIELD.x) v.x *= -1;
+      if (Math.abs(p.y) > FIELD.y) v.y *= -1;
+      if (Math.abs(p.z + 2) > FIELD.z) v.z *= -1;
+      pointsArr[i * 3] = p.x;
+      pointsArr[i * 3 + 1] = p.y;
+      pointsArr[i * 3 + 2] = p.z;
+    }
+    pointsGeo.attributes.position.needsUpdate = true;
+
+    let segIdx = 0;
+    for (let i = 0; i < NODE_COUNT && segIdx < MAX_LINE_SEGMENTS; i++) {
+      for (let j = i + 1; j < NODE_COUNT && segIdx < MAX_LINE_SEGMENTS; j++) {
+        const dist = nodePositions[i].distanceTo(nodePositions[j]);
+        if (dist < LINK_DIST) {
+          const a = nodePositions[i], b = nodePositions[j];
+          const base = segIdx * 6;
+          lineArr[base] = a.x; lineArr[base + 1] = a.y; lineArr[base + 2] = a.z;
+          lineArr[base + 3] = b.x; lineArr[base + 4] = b.y; lineArr[base + 5] = b.z;
+          segIdx++;
+        }
+      }
+    }
+    lineGeo.setDrawRange(0, segIdx * 2);
+    lineGeo.attributes.position.needsUpdate = true;
+  }
+
+  /* ---------------------------------------------------------
+     Layer 2 — Focal Section Models (Including CW Core Logo)
+     --------------------------------------------------------- */
+
+  const focal = new THREE.Group();
+  focal.position.set(isSmall ? 0 : 2.5, isSmall ? -1.8 : 0, 0);
+  scene.add(focal);
+
+  function wireMat(color, opacity = 1) {
+    return new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity });
+  }
+
+  // Procedural CW Canvas Texture Generator
   function createCWTexture() {
     const c = document.createElement('canvas');
     c.width = 512; c.height = 512;
     const ctx = c.getContext('2d');
-    
-    const grad = ctx.createRadialGradient(256, 256, 10, 256, 256, 256);
-    grad.addColorStop(0, 'rgba(157, 78, 221, 0.9)');
-    grad.addColorStop(0.5, 'rgba(0, 242, 254, 0.6)');
-    grad.addColorStop(1, 'rgba(3, 7, 18, 0)');
+
+    const grad = ctx.createRadialGradient(256, 256, 10, 256, 256, 240);
+    grad.addColorStop(0, COLOR.amber);
+    grad.addColorStop(0.5, COLOR.violet);
+    grad.addColorStop(1, '#0A0D12');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 512, 512);
 
-    ctx.strokeStyle = '#00f2fe';
-    ctx.lineWidth = 8;
+    ctx.strokeStyle = COLOR.teal;
+    ctx.lineWidth = 10;
     ctx.beginPath();
-    ctx.arc(256, 256, 200, 0, Math.PI * 2);
+    ctx.arc(256, 256, 210, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 160px Inter, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 170px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#00f2fe';
+    ctx.shadowColor = COLOR.amber;
     ctx.shadowBlur = 25;
     ctx.fillText('CW', 256, 256);
 
     return new THREE.CanvasTexture(c);
   }
 
-  // ==========================================
-  // 1. HERO: QUANTUM CORE & GLASS SHARD SWARM
-  // ==========================================
-  const heroGroup = new THREE.Group();
-  heroGroup.position.set(3.2, 0, 0);
-
-  const particleGeo = new THREE.BufferGeometry();
-  const count = 350;
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < count * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 7;
-  }
-  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  const particleMat = new THREE.PointsMaterial({ size: 0.035, color: 0x00f2fe, transparent: true, opacity: 0.85 });
-  const heroParticles = new THREE.Points(particleGeo, particleMat);
-  heroGroup.add(heroParticles);
-
-  const shardGroup = new THREE.Group();
-  const shardMat = new THREE.MeshPhysicalMaterial({
-    color: 0x00f2fe, metalness: 0.1, roughness: 0.1, transmission: 0.9, thickness: 0.5, transparent: true, opacity: 0.7
-  });
-  const shards = [];
-  for (let i = 0; i < 8; i++) {
-    const shardGeo = new THREE.ConeGeometry(0.2, 0.8, 3);
-    const shard = new THREE.Mesh(shardGeo, shardMat);
-    const angle = (i / 8) * Math.PI * 2;
-    shard.position.set(Math.cos(angle) * 2.2, (Math.random() - 0.5) * 1.5, Math.sin(angle) * 2.2);
-    shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-    shardGroup.add(shard);
-    shards.push({ mesh: shard, angle: angle, speed: 0.008 + Math.random() * 0.005 });
-  }
-  heroGroup.add(shardGroup);
-
-  const cwMat = new THREE.MeshBasicMaterial({ map: createCWTexture(), transparent: true });
-  const cwCore = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 32), cwMat);
-  heroGroup.add(cwCore);
-
-  const cageGeo = new THREE.IcosahedronGeometry(1.4, 1);
-  const cageMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, wireframe: true, emissive: 0x00f2fe, emissiveIntensity: 0.8 });
-  const cage = new THREE.Mesh(cageGeo, cageMat);
-  heroGroup.add(cage);
-
-  const ringMat = new THREE.MeshPhysicalMaterial({ color: 0x9d4edd, metalness: 0.8, roughness: 0.2, clearcoat: 1.0 });
-  const gyroRing1 = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.03, 16, 100), ringMat);
-  gyroRing1.rotation.x = Math.PI / 3;
-  heroGroup.add(gyroRing1);
-
-  const gyroRing2 = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.02, 16, 100), ringMat);
-  gyroRing2.rotation.y = Math.PI / 4;
-  heroGroup.add(gyroRing2);
-
-  scene.add(heroGroup);
-
-  // ==========================================
-  // 2. COURSES: CYBER TERMINAL & STREAMING CODE
-  // ==========================================
-  const coursesGroup = new THREE.Group();
-  coursesGroup.position.set(3.2, -Y_OFFSET, 0);
-
-  const monitorFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(3.8, 2.3, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.95, roughness: 0.15 })
+  // 1. Hero — Quantum Core Cage with CW Emblem Sphere
+  const heroModel = new THREE.Group();
+  const heroIco = new THREE.Mesh(new THREE.IcosahedronGeometry(1.9, 1), wireMat(COLOR.amber, 0.7));
+  const cwSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.9, 32, 32),
+    new THREE.MeshBasicMaterial({ map: createCWTexture() })
   );
-  coursesGroup.add(monitorFrame);
+  const heroRing = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.025, 16, 100), wireMat(COLOR.teal, 0.8));
+  heroRing.rotation.x = Math.PI / 3;
+  heroModel.add(heroIco, cwSphere, heroRing);
 
-  const edgeGlow = new THREE.Mesh(
-    new THREE.BoxGeometry(3.86, 2.36, 0.05),
-    new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true })
-  );
-  edgeGlow.position.z = -0.05;
-  coursesGroup.add(edgeGlow);
-
-  const codeCanvas = document.createElement('canvas');
-  codeCanvas.width = 1024; codeCanvas.height = 640;
-  const codeCtx = codeCanvas.getContext('2d');
-  const codeTex = new THREE.CanvasTexture(codeCanvas);
-
-  const screenMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.6, 2.1),
-    new THREE.MeshBasicMaterial({ map: codeTex })
-  );
-  screenMesh.position.z = 0.11;
-  coursesGroup.add(screenMesh);
-
-  const matrixCols = Array(64).fill(0);
-  function drawCodeStream() {
-    codeCtx.fillStyle = 'rgba(3, 7, 18, 0.25)';
-    codeCtx.fillRect(0, 0, codeCanvas.width, codeCanvas.height);
-    codeCtx.fillStyle = '#00f2fe';
-    codeCtx.font = '600 20px "JetBrains Mono", monospace';
-
-    matrixCols.forEach((y, i) => {
-      const char = String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96));
-      codeCtx.fillText(char, i * 16, y);
-      if (y > 640 + Math.random() * 10000) matrixCols[i] = 0;
-      else matrixCols[i] = y + 20;
-    });
-    codeTex.needsUpdate = true;
+  // 2. Courses — Stacked Modular Server Blocks
+  const coursesModel = new THREE.Group();
+  const moduleColors = [COLOR.amber, COLOR.teal, COLOR.violet, COLOR.teal, COLOR.amber];
+  for (let i = 0; i < 5; i++) {
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.38, 1.6),
+      wireMat(moduleColors[i], 0.85)
+    );
+    box.position.y = -1.1 + i * 0.55;
+    box.rotation.y = i * 0.25;
+    coursesModel.add(box);
   }
 
-  scene.add(coursesGroup);
+  // 3. Dashboard — Radar Telemetry Rings
+  const dashboardModel = new THREE.Group();
+  const ringOuter = new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.02, 8, 64), wireMat(COLOR.teal));
+  const ringInner = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.015, 8, 48), wireMat(COLOR.amber));
+  ringInner.rotation.x = Math.PI / 2.4;
+  ringOuter.rotation.x = Math.PI / 2.4;
+  const hub = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 0), wireMat(COLOR.violet));
+  dashboardModel.add(ringOuter, ringInner, hub);
 
-  // ==========================================
-  // 3. DASHBOARD: 3D GLASS DATA VISUALIZER
-  // ==========================================
-  const dashboardGroup = new THREE.Group();
-  dashboardGroup.position.set(3.2, -Y_OFFSET * 2, 0);
-
-  const glassBars = [];
-  const barCount = 7;
-  const barMat = new THREE.MeshPhysicalMaterial({
-    color: 0x00f2fe, metalness: 0.2, roughness: 0.1, transmission: 0.8, thickness: 0.8, emissive: 0x00f2fe, emissiveIntensity: 0.3
+  // 4. Stories — Trajectory Ribbon Path
+  const storiesCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-1.6, -1.4, 0),
+    new THREE.Vector3(-0.6, -0.3, 0.6),
+    new THREE.Vector3(0.3, 0.6, -0.4),
+    new THREE.Vector3(1.2, 1.5, 0.3)
+  ]);
+  const storiesModel = new THREE.Mesh(
+    new THREE.TubeGeometry(storiesCurve, 64, 0.06, 8, false),
+    wireMat(COLOR.amber, 0.8)
+  );
+  [0, 0.33, 0.66, 1].forEach((t) => {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), new THREE.MeshBasicMaterial({ color: COLOR.teal }));
+    dot.position.copy(storiesCurve.getPoint(t));
+    storiesModel.add(dot);
   });
 
-  const chartPoints = [];
-  for (let i = 0; i < barCount; i++) {
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1, 0.32), barMat);
-    bar.position.x = (i - barCount / 2) * 0.55;
-    dashboardGroup.add(bar);
-    glassBars.push(bar);
-    chartPoints.push(new THREE.Vector3(bar.position.x, 1, 0));
+  // 5. About — Lattice Network
+  const aboutModel = new THREE.Group();
+  const latticeGeo = new THREE.BufferGeometry();
+  const latticePts = [];
+  for (let i = 0; i < 5; i++) {
+    const y = -1.4 + i * 0.7;
+    latticePts.push(-1.6, y, 0, 1.6, y, 0);
+    if (i < 4) latticePts.push(1.6, y, 0, -1.6, y + 0.7, 0);
+  }
+  latticeGeo.setAttribute('position', new THREE.Float32BufferAttribute(latticePts, 3));
+  aboutModel.add(new THREE.LineSegments(latticeGeo, new THREE.LineBasicMaterial({ color: COLOR.violet, transparent: true, opacity: 0.8 })));
+  for (let i = 0; i < 5; i++) {
+    const node = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), new THREE.MeshBasicMaterial({ color: i % 2 ? COLOR.amber : COLOR.teal }));
+    node.position.set(-1.6, -1.4 + i * 0.7, 0);
+    aboutModel.add(node);
   }
 
-  const chartLineGeo = new THREE.BufferGeometry().setFromPoints(chartPoints);
-  const chartLineMat = new THREE.LineBasicMaterial({ color: 0x9d4edd, linewidth: 4 });
-  const chartLine = new THREE.Line(chartLineGeo, chartLineMat);
-  dashboardGroup.add(chartLine);
-
-  scene.add(dashboardGroup);
-
-  // ==========================================
-  // 4. STORIES: NEURAL CONSTELLATION MESH
-  // ==========================================
-  const storiesGroup = new THREE.Group();
-  storiesGroup.position.set(3.2, -Y_OFFSET * 3, 0);
-
-  const netCount = 40;
-  const netGeo = new THREE.BufferGeometry();
-  const netPositions = new Float32Array(netCount * 3);
-
-  for (let i = 0; i < netCount; i++) {
-    netPositions[i * 3] = (Math.random() - 0.5) * 5;
-    netPositions[i * 3 + 1] = (Math.random() - 0.5) * 4;
-    netPositions[i * 3 + 2] = (Math.random() - 0.5) * 2;
+  // 6. Contact — Pulsing Signal Beacon
+  const contactModel = new THREE.Group();
+  const beaconCore = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), wireMat(COLOR.amber));
+  contactModel.add(beaconCore);
+  const beaconRings = [];
+  for (let i = 0; i < 3; i++) {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.5 + i * 0.5, 0.52 + i * 0.5, 48),
+      new THREE.MeshBasicMaterial({ color: COLOR.teal, transparent: true, opacity: 0.5 - i * 0.12, side: THREE.DoubleSide })
+    );
+    beaconRings.push(ring);
+    contactModel.add(ring);
   }
-  netGeo.setAttribute('position', new THREE.BufferAttribute(netPositions, 3));
 
-  const netPoints = new THREE.Points(
-    netGeo,
-    new THREE.PointsMaterial({ size: 0.08, color: 0x00f2fe, transparent: true, opacity: 0.9 })
-  );
-  storiesGroup.add(netPoints);
+  const scenesByKey = {
+    hero: heroModel,
+    courses: coursesModel,
+    dashboard: dashboardModel,
+    stories: storiesModel,
+    about: aboutModel,
+    contact: contactModel
+  };
 
-  const netWireMesh = new THREE.LineSegments(
-    new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.3, 2)),
-    new THREE.LineBasicMaterial({ color: 0x9d4edd, transparent: true, opacity: 0.35 })
-  );
-  storiesGroup.add(netWireMesh);
-
-  scene.add(storiesGroup);
-
-  // ==========================================
-  // 5. ABOUT: BIOMETRIC CYBER EYE ASSEMBLY
-  // ==========================================
-  const aboutGroup = new THREE.Group();
-  aboutGroup.position.set(3.2, -Y_OFFSET * 4, 0);
-
-  const eyeCasing = new THREE.Mesh(
-    new THREE.SphereGeometry(1.6, 32, 32),
-    new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.9, roughness: 0.2 })
-  );
-  aboutGroup.add(eyeCasing);
-
-  const irisGroup = new THREE.Group();
-  irisGroup.position.z = 1.35;
-
-  const apertureRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.65, 0.05, 16, 100),
-    new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 1.0 })
-  );
-  irisGroup.add(apertureRing);
-
-  const glowingPupil = new THREE.Mesh(
-    new THREE.SphereGeometry(0.38, 32, 32),
-    new THREE.MeshBasicMaterial({ color: 0x9d4edd })
-  );
-  irisGroup.add(glowingPupil);
-
-  aboutGroup.add(irisGroup);
-  scene.add(aboutGroup);
-
-  // ==========================================
-  // 6. CONTACT: GLASS HOLOGRAPHIC COMMUNICATOR
-  // ==========================================
-  const contactGroup = new THREE.Group();
-  contactGroup.position.set(3.2, -Y_OFFSET * 5, 0);
-
-  const commOrb = new THREE.Mesh(
-    new THREE.SphereGeometry(1.2, 32, 32),
-    new THREE.MeshPhysicalMaterial({
-      color: 0x00f2fe, metalness: 0.1, roughness: 0.05, transmission: 0.9, thickness: 1.5, emissive: 0x00f2fe, emissiveIntensity: 0.2
-    })
-  );
-  contactGroup.add(commOrb);
-
-  const signalRing = new THREE.Mesh(
-    new THREE.TorusGeometry(1.8, 0.02, 16, 100),
-    new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.7 })
-  );
-  signalRing.rotation.x = Math.PI / 2.5;
-  contactGroup.add(signalRing);
-
-  const innerSymbol = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.5, 0),
-    new THREE.MeshStandardMaterial({ color: 0x9d4edd, emissive: 0x9d4edd, emissiveIntensity: 1.0, wireframe: true })
-  );
-  contactGroup.add(innerSymbol);
-
-  scene.add(contactGroup);
-
-  // ==========================================
-  // ANIMATION LOOP
-  // ==========================================
-  let scrollY = 0;
-  window.addEventListener('scroll', () => {
-    scrollY = window.scrollY / window.innerHeight;
+  Object.values(scenesByKey).forEach((m) => {
+    m.scale.setScalar(0.001);
+    focal.add(m);
   });
 
-  const clock = new THREE.Clock();
+  let activeKey = 'hero';
+  heroModel.scale.setScalar(1);
 
-  function renderLoop() {
-    const elapsed = clock.getElapsedTime();
-
-    mouseX += (targetMouseX - mouseX) * 0.06;
-    mouseY += (targetMouseY - mouseY) * 0.06;
-
-    camera.position.y = -scrollY * Y_OFFSET;
-
-    // Hero
-    cwCore.rotation.y = elapsed * 0.4;
-    cage.rotation.y = -elapsed * 0.2;
-    cage.rotation.x = elapsed * 0.1;
-    gyroRing1.rotation.z = elapsed * 0.3;
-    gyroRing2.rotation.z = -elapsed * 0.2;
-    shards.forEach((s) => {
-      s.angle += s.speed;
-      s.mesh.position.x = Math.cos(s.angle) * 2.2;
-      s.mesh.position.z = Math.sin(s.angle) * 2.2;
-      s.mesh.rotation.x += 0.01;
-    });
-    heroGroup.rotation.y = mouseX * 0.4;
-    heroGroup.rotation.x = -mouseY * 0.3;
-
-    // Courses
-    drawCodeStream();
-    coursesGroup.rotation.y = mouseX * 0.35;
-    coursesGroup.rotation.x = -mouseY * 0.25;
-
-    // Dashboard
-    const chartLinePos = chartLine.geometry.attributes.position.array;
-    glassBars.forEach((bar, index) => {
-      const h = Math.sin(elapsed * 2.5 + index) * 0.85 + 1.25;
-      bar.scale.y = h;
-      bar.position.y = h / 2 - 0.5;
-      chartLinePos[index * 3 + 1] = h;
-    });
-    chartLine.geometry.attributes.position.needsUpdate = true;
-    dashboardGroup.rotation.y = mouseX * 0.35;
-    dashboardGroup.rotation.x = -mouseY * 0.25;
-
-    // Stories
-    netWireMesh.rotation.y = elapsed * 0.15;
-    storiesGroup.rotation.y = mouseX * 0.4;
-    storiesGroup.rotation.x = -mouseY * 0.3;
-
-    // About Eye Tracking
-    aboutGroup.rotation.y = mouseX * 0.65;
-    aboutGroup.rotation.x = -mouseY * 0.45;
-    apertureRing.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.05);
-
-    // Contact
-    commOrb.position.y = Math.sin(elapsed * 1.8) * 0.12;
-    innerSymbol.rotation.y = elapsed * 0.8;
-    signalRing.rotation.z = elapsed * 0.4;
-    contactGroup.rotation.y = mouseX * 0.4;
-    contactGroup.rotation.x = -mouseY * 0.3;
-
-    renderer.render(scene, camera);
-    requestAnimationFrame(renderLoop);
+  function setActiveSection(key) {
+    if (!scenesByKey[key] || key === activeKey) return;
+    activeKey = key;
   }
 
-  renderLoop();
+  // Section Tracking via IntersectionObserver
+  const sectionEls = Array.from(document.querySelectorAll('.scroll-section[id]'));
+  if ('IntersectionObserver' in window && sectionEls.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) setActiveSection(entry.target.id);
+      });
+    }, { threshold: 0.4 });
+    sectionEls.forEach((el) => io.observe(el));
+  }
+
+  // Mouse Parallax Physics Lerp
+  let targetRotX = 0, targetRotY = 0;
+  if (!isSmall) {
+    window.addEventListener('pointermove', (e) => {
+      targetRotY = (e.clientX / window.innerWidth - 0.5) * 0.35;
+      targetRotX = (e.clientY / window.innerHeight - 0.5) * 0.25;
+    }, { passive: true });
+  }
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    focal.position.set(window.innerWidth < 720 ? 0 : 2.5, window.innerWidth < 720 ? -1.8 : 0, 0);
   });
-});
+
+  /* ---------------------------------------------------------
+     Render Loop
+     --------------------------------------------------------- */
+
+  let frame = 0;
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    frame++;
+    const t = clock.getElapsedTime();
+
+    if (frame % 2 === 0) updateNetwork();
+
+    points.rotation.y += 0.0005;
+    lines.rotation.y += 0.0005;
+
+    // Crossfade section models
+    Object.entries(scenesByKey).forEach(([key, mesh]) => {
+      const target = key === activeKey ? 1 : 0;
+      const current = mesh.scale.x;
+      const next = THREE.MathUtils.lerp(current, Math.max(target, 0.001), 0.06);
+      mesh.scale.setScalar(next);
+      mesh.visible = next > 0.02;
+    });
+
+    // Model specific rotations
+    heroIco.rotation.y = t * 0.2;
+    cwSphere.rotation.y = -t * 0.4;
+    heroRing.rotation.z = t * 0.15;
+
+    coursesModel.rotation.y = t * 0.2;
+    coursesModel.children.forEach((box, i) => { box.position.y = -1.1 + i * 0.55 + Math.sin(t * 1.5 + i) * 0.03; });
+
+    dashboardModel.rotation.z = t * 0.25;
+    dashboardModel.children[0].rotation.z = -t * 0.35;
+
+    storiesModel.rotation.y = t * 0.18;
+    aboutModel.rotation.y = Math.sin(t * 0.3) * 0.25;
+
+    contactModel.rotation.z = t * 0.1;
+    beaconRings.forEach((ring, i) => {
+      const s = 1 + ((t * 0.6 + i * 0.5) % 1.6);
+      ring.scale.setScalar(s);
+      ring.material.opacity = Math.max(0, 0.5 - i * 0.12 - (s - 1) * 0.25);
+    });
+
+    focal.rotation.y += (targetRotY - focal.rotation.y) * 0.05;
+    focal.rotation.x += (targetRotX - focal.rotation.x) * 0.05;
+
+    renderer.render(scene, camera);
+  }
+
+  if (prefersReducedMotion) {
+    renderer.render(scene, camera);
+  } else {
+    animate();
+  }
+})();
