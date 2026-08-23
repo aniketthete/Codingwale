@@ -1,4 +1,4 @@
-// CodingWale 3D Engine - Realistic Lighting & Material Setup
+// CodingWale 3D Engine - Mouse-Only Interaction & Larger Model
 const canvas = document.getElementById('webgl-canvas');
 
 if (canvas) {
@@ -20,14 +20,12 @@ if (canvas) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Fix color encoding so dark colors aren't blown out/washed out
   renderer.outputEncoding = THREE.sRGBEncoding;
 
-  // Balanced Lighting (Reduced ambient intensity to reveal shadows & textures)
+  // Balanced Lighting
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambientLight);
 
-  // Directional Rim Lights for sleek futuristic highlights
   const cyanLight = new THREE.DirectionalLight(0x00f2fe, 2.0);
   cyanLight.position.set(5, 5, 5);
   scene.add(cyanLight);
@@ -36,14 +34,13 @@ if (canvas) {
   purpleLight.position.set(-5, -5, -2);
   scene.add(purpleLight);
 
-  // Load GLB Model with its Native Textures
+  // Load GLB Model
   let terminalModel;
   const loader = new THREE.GLTFLoader();
 
   loader.load('laptop.glb', (gltf) => {
     terminalModel = gltf.scene;
 
-    // Preserve native material properties without overwriting them
     terminalModel.traverse((child) => {
       if (child.isMesh) {
         child.material.depthWrite = true;
@@ -51,7 +48,8 @@ if (canvas) {
       }
     });
 
-    terminalModel.scale.set(0.55, 0.55, 0.55);
+    // Increased size scale from 0.55 to 0.85
+    terminalModel.scale.set(0.85, 0.85, 0.85);
     terminalModel.rotation.x = 0.2;
     
     if (window.innerWidth > 900) {
@@ -65,7 +63,7 @@ if (canvas) {
     console.error('Error loading model:', error);
   });
 
-  // Background Particles
+  // Background Ambient Particles
   const particleCount = 50;
   const particlesGeometry = new THREE.BufferGeometry();
   const positions = new Float32Array(particleCount * 3);
@@ -86,14 +84,15 @@ if (canvas) {
   const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
   scene.add(particleSystem);
 
-  // Mouse Parallax & Scroll Controls
-  let mouseX = 0;
-  let mouseY = 0;
+  // Mouse Tracking & Smooth Interpolation Target Variables
+  let targetX = 0;
+  let targetY = 0;
   let scrollY = 0;
 
   window.addEventListener('mousemove', (e) => {
-    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    // Maps cursor position relative to screen center (-1 to +1)
+    targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetY = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
   window.addEventListener('scroll', () => {
@@ -107,12 +106,15 @@ if (canvas) {
     const elapsedTime = clock.getElapsedTime();
 
     if (terminalModel) {
-      terminalModel.rotation.y = elapsedTime * 0.25 + (mouseX * 0.25);
-      terminalModel.rotation.x = 0.15 + (mouseY * 0.15);
-      terminalModel.position.y = Math.sin(elapsedTime * 1.5) * 0.08 - (scrollY * 0.001);
+      // Rotation driven solely by cursor movement (no auto spin)
+      terminalModel.rotation.y = targetX * 0.8;
+      terminalModel.rotation.x = 0.2 + (targetY * 0.4);
+      
+      // Gentle subtle floating on Y axis
+      terminalModel.position.y = Math.sin(elapsedTime * 1.5) * 0.05 - (scrollY * 0.001);
     }
 
-    particleSystem.rotation.y = elapsedTime * 0.03;
+    particleSystem.rotation.y = elapsedTime * 0.02;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
