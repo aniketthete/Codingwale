@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodingWale | Master the Future of Code</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Particle Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Navbar -->
+  <header>
+    <div class="logo">CodingWale</div>
+    <nav>
+      <ul>
+        <li><a href="#courses">Courses</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="btn-glow">Get Started</button>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Level Up Your Tech Career With <span>CodingWale</span></h1>
+    <p>Master modern web development, software engineering, and DevOps with industry-leading futuristic interactive modules.</p>
+    <button class="btn-glow">Explore All Courses</button>
+  </section>
+
+  <!-- Courses Section -->
+  <section class="courses-section" id="courses">
+    <h2 class="section-title">Featured Learning Paths</h2>
+    
+    <div class="course-grid">
+
+      <!-- Course 1 -->
+      <div class="course-card">
+        <span class="badge">Web Design</span>
+        <h3>HTML5 & CSS3</h3>
+        <p>Master core structure, semantic tags, Flexbox, Grid, and responsive modern layouts from scratch.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Course 2 -->
+      <div class="course-card">
+        <span class="badge">UI Framework</span>
+        <h3>Bootstrap 5</h3>
+        <p>Build fast, mobile-first responsive interfaces rapidly using Bootstrap utility classes and components.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Course 3 -->
+      <div class="course-card">
+        <span class="badge">Enterprise</span>
+        <h3>Java Masterclass</h3>
+        <p>Learn Object-Oriented Programming, data structures, multithreading, and backend architecture in Java.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Course 4 -->
+      <div class="course-card">
+        <span class="badge">AI & Data</span>
+        <h3>Python Programming</h3>
+        <p>From core syntax and automation scripts to basic AI algorithms and data analysis workflows.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Course 5 -->
+      <div class="course-card">
+        <span class="badge">Complete Track</span>
+        <h3>Full Stack Web Dev</h3>
+        <p>Combine frontend mastery with Node.js, databases, REST APIs, and full end-to-end deployment.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Course 6 -->
+      <div class="course-card">
+        <span class="badge">Cloud & Ops</span>
+        <h3>DevOps & Cloud</h3>
+        <p>Master Docker containers, Kubernetes, CI/CD pipelines, Git workflows, and cloud infrastructure.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Course 7 -->
+      <div class="course-card">
+        <span class="badge">Systems</span>
+        <h3>C & C++ Mastery</h3>
+        <p>Understand memory allocation, pointers, performance optimizations, and system-level coding fundamentals.</p>
+        <div class="card-footer">
+          <a href="#" class="course-link">View Module &rarr;</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 CodingWale. All rights reserved. Built for future developers.</p>
+  </footer>
+
+  <!-- Background Particle Animation Script -->
+  <script>
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const particles = [];
+    const particleCount = 60;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 1;
+        this.vx = (Math.random() - 0.5) * 0.8;
+        this.vy = (Math.random() - 0.5) * 0.8;
+        this.color = Math.random() > 0.5 ? '#00f2fe' : '#7000ff';
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = rgba(0, 242, 254, ${1 - dist / 120});
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
