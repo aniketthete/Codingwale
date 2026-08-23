@@ -3,106 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodingWale | Next-Gen Tech Platform</title>
+  <title>CodingWale | Next-Gen Platform</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Three.js 3D Engine & Loaders -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
-<body data-page="home">
-
-  <!-- Fixed 3D Canvas Background -->
+<body>
   <canvas id="webgl-canvas"></canvas>
-
-  <!-- Navigation Bar -->
-  <header class="glass-nav">
-    <a href="index.html" class="logo">
-      <i class="fa-solid fa-cube logo-icon"></i>
-      <span>Coding<b>Wale</b></span>
-    </a>
-    <nav>
-      <ul id="nav-links">
-        <li><a href="index.html" class="active">Home</a></li>
-        <li><a href="courses.html">Courses</a></li>
-        <li><a href="progress.html">Dashboard</a></li>
-        <li><a href="success.html">Stories</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="contact.html">Contact</a></li>
-      </ul>
-    </nav>
-    <div class="nav-actions">
-      <a href="courses.html" class="btn-glow">Explore Matrix</a>
-      <div class="menu-toggle" id="mobile-menu"><i class="fa-solid fa-bars"></i></div>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-content">
-      <div class="tech-badge"><i class="fa-solid fa-atom"></i> Quantum Learning Platform</div>
-      <h1>Master the Future of <span>Software Architecture</span></h1>
-      <p>An immersive, 3D-driven interactive ecosystem designed for modern software engineers, cloud architects, and AI pioneers.</p>
-      <div class="hero-actions">
-        <a href="courses.html" class="btn-glow">Start Learning <i class="fa-solid fa-arrow-right"></i></a>
-        <a href="about.html" class="btn-glass">Discover Vision</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Chapter 01: Metrics Matrix -->
-  <section class="chapter-section" id="metrics">
-    <div class="section-tag">Chapter 01 // Impact</div>
-    <h2 class="chapter-title">Platform Performance Metrics</h2>
-    <div class="metrics-grid">
-      <div class="glass-card stat-card">
-        <h3 class="counter" data-target="15000">0</h3>
-        <p>Active Developers</p>
-      </div>
-      <div class="glass-card stat-card">
-        <h3 class="counter" data-target="98">0</h3>
-        <p>% Completion Rate</p>
-      </div>
-      <div class="glass-card stat-card">
-        <h3 class="counter" data-target="450">0</h3>
-        <p>Interactive Labs</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Chapter 02: Featured Pillars -->
-  <section class="chapter-section" id="pillars">
-    <div class="section-tag">Chapter 02 // Capability</div>
-    <h2 class="chapter-title">Core Learning Tracks</h2>
-    <div class="pillars-grid">
-      <div class="glass-card pillar-card">
-        <div class="pillar-icon"><i class="fa-solid fa-code"></i></div>
-        <h3>Full Stack Systems</h3>
-        <p>Architect end-to-end applications with modern frontend frameworks and scalable microservice backends.</p>
-        <a href="courses.html" class="card-link">View Track &rarr;</a>
-      </div>
-      <div class="glass-card pillar-card">
-        <div class="pillar-icon"><i class="fa-solid fa-brain"></i></div>
-        <h3>AI & Machine Learning</h3>
-        <p>Build, train, and deploy neural networks, large language models, and automated data pipelines.</p>
-        <a href="courses.html" class="card-link">View Track &rarr;</a>
-      </div>
-      <div class="glass-card pillar-card">
-        <div class="pillar-icon"><i class="fa-solid fa-cloud"></i></div>
-        <h3>Cloud & DevOps Engineering</h3>
-        <p>Master container orchestration, automated CI/CD pipelines, and infrastructure as code.</p>
-        <a href="courses.html" class="card-link">View Track &rarr;</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="glass-footer">
-    <p>&copy; 2026 CodingWale. Built with Three.js & Orano Design Architecture.</p>
-  </footer>
-
-  <!-- Scripts -->
+  <nav class="navbar">
+    <div class="logo"><span class="logo-icon"></span><span class="logo-text">CodingWale</span></div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="stories.html">Stories</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="cta-button">Explore Matrix</button>
+  </nav>
   <script src="script.js"></script>
   <script src="models-3d.js"></script>
 </body>
