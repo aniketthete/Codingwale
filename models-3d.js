@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 1. HERO: PREMIUM HOLOGRAPHIC HYPER-CORE
+  // 1. HERO: HOLOGRAPHIC HYPER-CORE WITH CW LOGO
   // ==========================================
   const heroGroup = new THREE.Group();
   heroGroup.position.set(3.2, 0, 0);
@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const particles = new THREE.Points(particleGeo, particleMat);
   heroGroup.add(particles);
 
-  // Central Icosahedron Core
-  const icoGeo = new THREE.IcosahedronGeometry(1.2, 1);
+  // Outer Wireframe Icosahedron
+  const icoGeo = new THREE.IcosahedronGeometry(1.3, 1);
   const icoMat = new THREE.MeshStandardMaterial({ 
     color: 0x030712, 
     wireframe: true, 
@@ -66,13 +66,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const coreIco = new THREE.Mesh(icoGeo, icoMat);
   heroGroup.add(coreIco);
 
-  // Inner Core Sphere
-  const innerGeo = new THREE.SphereGeometry(0.7, 32, 32);
-  const innerMat = new THREE.MeshStandardMaterial({ color: 0x7000ff, emissive: 0x7000ff, emissiveIntensity: 0.8, roughness: 0.2 });
+  // Dynamic CW Logo Texture Canvas Generation
+  const cwCanvas = document.createElement('canvas');
+  cwCanvas.width = 512;
+  cwCanvas.height = 512;
+  const cwCtx = cwCanvas.getContext('2d');
+
+  // Radial Neon Glow Background
+  const gradient = cwCtx.createRadialGradient(256, 256, 20, 256, 256, 240);
+  gradient.addColorStop(0, '#7000ff');
+  gradient.addColorStop(0.5, '#00f2fe');
+  gradient.addColorStop(1, '#030712');
+  cwCtx.fillStyle = gradient;
+  cwCtx.fillRect(0, 0, 512, 512);
+
+  // Outer Holographic Circle Ring
+  cwCtx.strokeStyle = '#00f2fe';
+  cwCtx.lineWidth = 12;
+  cwCtx.beginPath();
+  cwCtx.arc(256, 256, 220, 0, Math.PI * 2);
+  cwCtx.stroke();
+
+  // CW Typography
+  cwCtx.fillStyle = '#ffffff';
+  cwCtx.font = '900 180px sans-serif';
+  cwCtx.textAlign = 'center';
+  cwCtx.textBaseline = 'middle';
+  cwCtx.shadowColor = '#00f2fe';
+  cwCtx.shadowBlur = 30;
+  cwCtx.fillText('CW', 256, 256);
+
+  const cwTexture = new THREE.CanvasTexture(cwCanvas);
+
+  // Central Holographic CW Core Sphere
+  const innerGeo = new THREE.SphereGeometry(0.75, 32, 32);
+  const innerMat = new THREE.MeshBasicMaterial({ map: cwTexture });
   const innerCore = new THREE.Mesh(innerGeo, innerMat);
   heroGroup.add(innerCore);
 
-  // Torus Rings
+  // Surrounding Orbital Torus Rings
   const ringGeo = new THREE.TorusGeometry(2.2, 0.03, 16, 100);
   const ringMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.5 });
   const ring1 = new THREE.Mesh(ringGeo, ringMat);
@@ -86,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   scene.add(heroGroup);
 
   // ==========================================
-  // 2. COURSES: CURVED CURVED MONITOR & CODE
+  // 2. COURSES: CURVED MONITOR & MATRIX CODE
   // ==========================================
   const coursesGroup = new THREE.Group();
   coursesGroup.position.set(3.2, -Y_OFFSET, 0);
@@ -168,13 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const nodeCount = 30;
   const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
   const nodeMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.8 });
-  const nodes = [];
 
   for (let i = 0; i < nodeCount; i++) {
     const node = new THREE.Mesh(nodeGeo, nodeMat);
     node.position.set((Math.random() - 0.5) * 4.5, (Math.random() - 0.5) * 3.5, (Math.random() - 0.5) * 2);
     storiesGroup.add(node);
-    nodes.push(node);
   }
 
   const networkGeo = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.2, 2));
@@ -185,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
   scene.add(storiesGroup);
 
   // ==========================================
-  // 5. ABOUT: CYBER EYE WITH ACTIVE CURSOR TRACKING
+  // 5. ABOUT: CYBER EYE WITH CURSOR TRACKING
   // ==========================================
   const aboutGroup = new THREE.Group();
   aboutGroup.position.set(3.2, -Y_OFFSET * 4, 0);
@@ -212,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
   scene.add(aboutGroup);
 
   // ==========================================
-  // 6. CONTACT: METALLIC GLASS CHAT ICON
+  // 6. CONTACT: GLASS CHAT BUBBLE ICON
   // ==========================================
   const contactGroup = new THREE.Group();
   contactGroup.position.set(3.2, -Y_OFFSET * 5, 0);
@@ -259,21 +289,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Smooth camera scroll transition
     camera.position.y = -scrollY * Y_OFFSET;
 
-    // 1. Hero Dynamic Rotation + Cursor Response
+    // 1. Hero Core CW Logo Rotation & Pulse
     coreIco.rotation.y = elapsed * 0.4;
     coreIco.rotation.x = elapsed * 0.2;
-    innerCore.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.08);
+    innerCore.rotation.y = elapsed * 0.5;
+    innerCore.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.05);
     ring1.rotation.z = elapsed * 0.3;
     ring2.rotation.z = -elapsed * 0.3;
     heroGroup.rotation.y = mouseX * 0.5;
     heroGroup.rotation.x = -mouseY * 0.5;
 
-    // 2. Courses Cursor Rotation & Matrix Screen Update
+    // 2. Courses Matrix Animation & Tilt
     updateMatrixCode();
     coursesGroup.rotation.y = mouseX * 0.4;
     coursesGroup.rotation.x = -mouseY * 0.3;
 
-    // 3. Dashboard Real-Time Bars & Cursor Response
+    // 3. Dashboard Real-Time Bars
     const positions = lineGraph.geometry.attributes.position.array;
     bars.forEach((bar, index) => {
       const h = Math.sin(elapsed * 3 + index) * 0.9 + 1.3;
@@ -285,16 +316,16 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboardGroup.rotation.y = mouseX * 0.4;
     dashboardGroup.rotation.x = -mouseY * 0.3;
 
-    // 4. Stories Constellation Motion
+    // 4. Stories Network Rotation
     networkMesh.rotation.y = elapsed * 0.2;
     storiesGroup.rotation.y = mouseX * 0.5;
     storiesGroup.rotation.x = -mouseY * 0.4;
 
-    // 5. About Eye Cursor Tracking
+    // 5. About Eye Mouse Tracking
     aboutGroup.rotation.y = mouseX * 0.7;
     aboutGroup.rotation.x = -mouseY * 0.5;
 
-    // 6. Contact Chat Floating & Tilt
+    // 6. Contact Chat Floating
     contactGroup.position.y = -Y_OFFSET * 5 + Math.sin(elapsed * 2) * 0.15;
     contactGroup.rotation.y = mouseX * 0.6;
     contactGroup.rotation.x = -mouseY * 0.4;
