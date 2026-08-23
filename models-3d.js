@@ -1,4 +1,4 @@
-// CodingWale 3D Engine - Universal Texture Assignment
+// CodingWale 3D Engine - Display Terminal Texture Loader
 const canvas = document.getElementById('webgl-canvas');
 
 if (canvas) {
@@ -20,84 +20,79 @@ if (canvas) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Lighting Setup
+  // Studio Lighting
   const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
   scene.add(ambientLight);
 
-  const cyanLight = new THREE.DirectionalLight(0x00f2fe, 3);
+  const cyanLight = new THREE.DirectionalLight(0x00f2fe, 3.5);
   cyanLight.position.set(5, 5, 5);
   scene.add(cyanLight);
 
-  // Dynamic Canvas Texture for Code Display
-  const codeCanvas = document.createElement('canvas');
-  codeCanvas.width = 512;
-  codeCanvas.height = 512;
-  const ctx = codeCanvas.getContext('2d');
-  const codeTexture = new THREE.CanvasTexture(codeCanvas);
+  const purpleLight = new THREE.DirectionalLight(0x7000ff, 2.0);
+  purpleLight.position.set(-5, -5, -2);
+  scene.add(purpleLight);
 
-  const codeLines = [
-    '// CodingWale Matrix System',
-    'const app = new Terminal();',
-    'await app.loadModules();',
-    'function startEngine() {',
-    '  console.log("3D Active");',
-    '}',
-    'app.run();'
-  ];
+  // Load Custom Textures Uploaded to GitHub
+  const textureLoader = new THREE.TextureLoader();
+  
+  // Exact filenames matching your uploaded GitHub files
+  const diffuseMap = textureLoader.load('Display tesxtured from 3d coat_diffuse_1.png');
+  const normalMap = textureLoader.load('Display tesxtured from 3d coat_normalmap_0.png');
+  const metalnessMap = textureLoader.load('Display tesxtured from 3d coat_metalness-Disp.png');
 
-  let lineOffset = 0;
-  function updateScreenTexture() {
-    ctx.fillStyle = '#0a0f1a';
-    ctx.fillRect(0, 0, codeCanvas.width, codeCanvas.height);
-
-    ctx.font = 'bold 22px monospace';
-    ctx.fillStyle = '#00f2fe';
-
-    codeLines.forEach((line, index) => {
-      const y = 60 + index * 40 - (lineOffset % 40);
-      if (y > 0 && y < codeCanvas.height) {
-        ctx.fillText(line, 30, y);
-      }
-    });
-
-    lineOffset += 0.8;
-    codeTexture.needsUpdate = true;
-  }
-
-  // Load the Laptop GLB Model
-  let laptopModel;
+  // Load Terminal GLB Model
+  let terminalModel;
   const loader = new THREE.GLTFLoader();
 
   loader.load('laptop.glb', (gltf) => {
-    laptopModel = gltf.scene;
+    terminalModel = gltf.scene;
 
-    laptopModel.traverse((child) => {
+    terminalModel.traverse((child) => {
       if (child.isMesh) {
-        // Log child names to browser console for verification
-        console.log("Found GLB mesh:", child.name);
-
-        // Apply animated code material directly to meshes
-        child.material = new THREE.MeshBasicMaterial({
-          map: codeTexture
-        });
+        // Apply uploaded textures onto model materials
+        child.material.map = diffuseMap;
+        child.material.normalMap = normalMap;
+        child.material.metalnessMap = metalnessMap;
+        child.material.needsUpdate = true;
       }
     });
 
-    laptopModel.scale.set(0.6, 0.6, 0.6);
-    laptopModel.rotation.x = 0.3;
+    terminalModel.scale.set(0.6, 0.6, 0.6);
+    terminalModel.rotation.x = 0.2;
     
     if (window.innerWidth > 900) {
-      laptopModel.position.set(2, 0, 0);
+      terminalModel.position.set(2, 0, 0);
     } else {
-      laptopModel.position.set(0, 0, 0);
+      terminalModel.position.set(0, -0.5, 0);
     }
 
-    scene.add(laptopModel);
+    scene.add(terminalModel);
   }, undefined, (error) => {
-    console.error('Error loading GLB:', error);
+    console.error('Error loading terminal model:', error);
   });
 
-  // Mouse Parallax & Scroll Events
+  // Background Ambient Particles
+  const particleCount = 50;
+  const particlesGeometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+
+  for (let i = 0; i < particleCount * 3; i += 3) {
+    positions[i] = (Math.random() - 0.5) * 10;
+    positions[i + 1] = (Math.random() - 0.5) * 10;
+    positions[i + 2] = (Math.random() - 0.5) * 10;
+  }
+
+  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particlesMaterial = new THREE.PointsMaterial({
+    color: 0x00f2fe,
+    size: 0.04,
+    transparent: true,
+    opacity: 0.5
+  });
+  const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
+  scene.add(particleSystem);
+
+  // Mouse Parallax & Scroll Interaction
   let mouseX = 0;
   let mouseY = 0;
   let scrollY = 0;
@@ -117,13 +112,13 @@ if (canvas) {
   function animate() {
     const elapsedTime = clock.getElapsedTime();
 
-    updateScreenTexture();
-
-    if (laptopModel) {
-      laptopModel.rotation.y = elapsedTime * 0.3 + (mouseX * 0.3);
-      laptopModel.rotation.x = 0.2 + (mouseY * 0.2);
-      laptopModel.position.y = Math.sin(elapsedTime * 1.5) * 0.1 - (scrollY * 0.001);
+    if (terminalModel) {
+      terminalModel.rotation.y = elapsedTime * 0.25 + (mouseX * 0.25);
+      terminalModel.rotation.x = 0.15 + (mouseY * 0.15);
+      terminalModel.position.y = Math.sin(elapsedTime * 1.5) * 0.08 - (scrollY * 0.001);
     }
+
+    particleSystem.rotation.y = elapsedTime * 0.03;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -131,7 +126,7 @@ if (canvas) {
 
   animate();
 
-  // Responsive Resizing
+  // Responsive Viewport Resizing
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -139,11 +134,11 @@ if (canvas) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    if (laptopModel) {
+    if (terminalModel) {
       if (window.innerWidth > 900) {
-        laptopModel.position.x = 2;
+        terminalModel.position.x = 2;
       } else {
-        laptopModel.position.x = 0;
+        terminalModel.position.x = 0;
       }
     }
   });
