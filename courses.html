@@ -3,87 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodingWale | Architecture Courses</title>
+  <title>CodingWale | Courses</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-  <!-- Canvas Background for 3D Skill Cubes -->
   <canvas id="webgl-canvas"></canvas>
-
-  <!-- Navigation Bar -->
   <nav class="navbar">
-    <div class="logo">
-      <span class="logo-icon"></span>
-      <span class="logo-text">CodingWale</span>
-    </div>
+    <div class="logo"><span class="logo-icon"></span><span class="logo-text">CodingWale</span></div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="courses.html" class="active">Courses</a></li>
-      <li><a href="#">Dashboard</a></li>
-      <li><a href="#">Stories</a></li>
-      <li><a href="#">About</a></li>
-      <li><a href="#">Contact</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="stories.html">Stories</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
     </ul>
     <button class="cta-button">Explore Matrix</button>
   </nav>
-
-  <!-- Main Content Container -->
   <main class="courses-container">
     <header class="courses-header">
       <span class="badge">Quantum Curriculum</span>
       <h1>Master Modern <span class="gradient-text">Tech Stacks</span></h1>
-      <p>Dive deep into distributed systems, AI architectures, and cloud-native ecosystems.</p>
     </header>
-
-    <!-- Filter Buttons -->
     <div class="filter-bar">
       <button class="filter-btn active" data-filter="all">All Modules</button>
       <button class="filter-btn" data-filter="architecture">System Architecture</button>
-      <button class="filter-btn" data-filter="ai">AI & ML Ops</button>
-      <button class="filter-btn" data-filter="cloud">Cloud Native</button>
     </div>
-
-    <!-- Course Grid -->
     <div class="courses-grid">
-      <!-- Card 1 -->
       <div class="course-card" data-category="architecture">
         <div class="card-tag">Advanced</div>
-        <h3>Distributed Systems Design</h3>
-        <p>Master microservices design patterns, event-driven architectures, and high-concurrency event streams.</p>
-        <div class="card-meta">
-          <span>8 Weeks</span>
-          <span>4.9 ★</span>
-        </div>
-        <button class="enroll-btn">Enroll Module</button>
-      </div>
-
-      <!-- Card 2 -->
-      <div class="course-card" data-category="ai">
-        <div class="card-tag">Trending</div>
-        <h3>LLM Infrastructure & RAG Systems</h3>
-        <p>Build scalable vector databases, local model deployment pipelines, and AI agent orchestration engines.</p>
-        <div class="card-meta">
-          <span>6 Weeks</span>
-          <span>5.0 ★</span>
-        </div>
-        <button class="enroll-btn">Enroll Module</button>
-      </div>
-
-      <!-- Card 3 -->
-      <div class="course-card" data-category="cloud">
-        <div class="card-tag">Practical</div>
-        <h3>Kubernetes & Service Mesh</h3>
-        <p>Production-grade container orchestration, Istio meshes, zero-downtime deployments, and telemetry.</p>
-        <div class="card-meta">
-          <span>5 Weeks</span>
-          <span>4.8 ★</span>
-        </div>
+        <h3>Distributed Systems</h3>
+        <p>Master microservices design patterns and event streams.</p>
         <button class="enroll-btn">Enroll Module</button>
       </div>
     </div>
   </main>
-
   <script src="script.js"></script>
   <script src="models-3d.js"></script>
 </body>
