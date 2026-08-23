@@ -1,4 +1,4 @@
-// CodingWale 3D Engine - Display Terminal Texture Loader
+// CodingWale 3D Engine - Realistic Lighting & Material Setup
 const canvas = document.getElementById('webgl-canvas');
 
 if (canvas) {
@@ -20,58 +20,52 @@ if (canvas) {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Studio Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
+  // Fix color encoding so dark colors aren't blown out/washed out
+  renderer.outputEncoding = THREE.sRGBEncoding;
+
+  // Balanced Lighting (Reduced ambient intensity to reveal shadows & textures)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambientLight);
 
-  const cyanLight = new THREE.DirectionalLight(0x00f2fe, 3.5);
+  // Directional Rim Lights for sleek futuristic highlights
+  const cyanLight = new THREE.DirectionalLight(0x00f2fe, 2.0);
   cyanLight.position.set(5, 5, 5);
   scene.add(cyanLight);
 
-  const purpleLight = new THREE.DirectionalLight(0x7000ff, 2.0);
+  const purpleLight = new THREE.DirectionalLight(0x7000ff, 1.5);
   purpleLight.position.set(-5, -5, -2);
   scene.add(purpleLight);
 
-  // Load Custom Textures Uploaded to GitHub
-  const textureLoader = new THREE.TextureLoader();
-  
-  // Exact filenames matching your uploaded GitHub files
-  const diffuseMap = textureLoader.load('Display tesxtured from 3d coat_diffuse_1.png');
-  const normalMap = textureLoader.load('Display tesxtured from 3d coat_normalmap_0.png');
-  const metalnessMap = textureLoader.load('Display tesxtured from 3d coat_metalness-Disp.png');
-
-  // Load Terminal GLB Model
+  // Load GLB Model with its Native Textures
   let terminalModel;
   const loader = new THREE.GLTFLoader();
 
   loader.load('laptop.glb', (gltf) => {
     terminalModel = gltf.scene;
 
+    // Preserve native material properties without overwriting them
     terminalModel.traverse((child) => {
       if (child.isMesh) {
-        // Apply uploaded textures onto model materials
-        child.material.map = diffuseMap;
-        child.material.normalMap = normalMap;
-        child.material.metalnessMap = metalnessMap;
-        child.material.needsUpdate = true;
+        child.material.depthWrite = true;
+        child.material.transparent = false;
       }
     });
 
-    terminalModel.scale.set(0.6, 0.6, 0.6);
+    terminalModel.scale.set(0.55, 0.55, 0.55);
     terminalModel.rotation.x = 0.2;
     
     if (window.innerWidth > 900) {
-      terminalModel.position.set(2, 0, 0);
+      terminalModel.position.set(2, -0.2, 0);
     } else {
       terminalModel.position.set(0, -0.5, 0);
     }
 
     scene.add(terminalModel);
   }, undefined, (error) => {
-    console.error('Error loading terminal model:', error);
+    console.error('Error loading model:', error);
   });
 
-  // Background Ambient Particles
+  // Background Particles
   const particleCount = 50;
   const particlesGeometry = new THREE.BufferGeometry();
   const positions = new Float32Array(particleCount * 3);
@@ -92,7 +86,7 @@ if (canvas) {
   const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
   scene.add(particleSystem);
 
-  // Mouse Parallax & Scroll Interaction
+  // Mouse Parallax & Scroll Controls
   let mouseX = 0;
   let mouseY = 0;
   let scrollY = 0;
@@ -126,7 +120,7 @@ if (canvas) {
 
   animate();
 
-  // Responsive Viewport Resizing
+  // Resize Listener
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
