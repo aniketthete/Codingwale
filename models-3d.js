@@ -1,5 +1,6 @@
 /* =========================================================
    CodingWale — models-3d.js (Redesigned Cyber System)
+   Hero Model: 3D Developer Monitor System
    ========================================================= */
 
 (function () {
@@ -17,7 +18,8 @@
     amber: hex('--amber', '#FF8A3D'),
     teal: hex('--teal', '#46D8B8'),
     violet: hex('--violet', '#8C7CFF'),
-    dim: '#2A303C'
+    dim: '#1E232A',
+    dark: '#0A0D12'
   };
 
   let renderer;
@@ -33,7 +35,7 @@
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
   camera.position.set(0, 0, 9);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
   const pointLight1 = new THREE.PointLight(new THREE.Color(COLOR.amber), 3, 20);
   pointLight1.position.set(5, 5, 5);
@@ -47,7 +49,7 @@
      Layer 1 — Interactive Constellation Field
      --------------------------------------------------------- */
 
-  const NODE_COUNT = isSmall ? 40 : 80;
+  const NODE_COUNT = isSmall ? 35 : 70;
   const FIELD = { x: 12, y: 7, z: 5 };
   const LINK_DIST = isSmall ? 2.5 : 2.8;
 
@@ -86,7 +88,7 @@
   const lineMat = new THREE.LineBasicMaterial({
     color: new THREE.Color(COLOR.dim),
     transparent: true,
-    opacity: 0.3
+    opacity: 0.35
   });
   const lines = new THREE.LineSegments(lineGeo, lineMat);
   scene.add(lines);
@@ -123,59 +125,183 @@
   }
 
   /* ---------------------------------------------------------
-     Layer 2 — Focal Section Models (Including CW Core Logo)
+     Layer 2 — Section Models
      --------------------------------------------------------- */
 
   const focal = new THREE.Group();
-  focal.position.set(isSmall ? 0 : 2.5, isSmall ? -1.8 : 0, 0);
+  focal.position.set(isSmall ? 0 : 2.2, isSmall ? -1.6 : 0, 0);
   scene.add(focal);
 
   function wireMat(color, opacity = 1) {
     return new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity });
   }
 
-  // Procedural CW Canvas Texture Generator
-  function createCWTexture() {
-    const c = document.createElement('canvas');
-    c.width = 512; c.height = 512;
-    const ctx = c.getContext('2d');
+  /* =========================================================
+     Dynamic IDE / Cyber Screen Canvas Texture
+     ========================================================= */
+  let screenCanvas, screenCtx, screenTexture;
 
-    const grad = ctx.createRadialGradient(256, 256, 10, 256, 256, 240);
-    grad.addColorStop(0, COLOR.amber);
-    grad.addColorStop(0.5, COLOR.violet);
-    grad.addColorStop(1, '#0A0D12');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 512);
-
-    ctx.strokeStyle = COLOR.teal;
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    ctx.arc(256, 256, 210, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 170px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = COLOR.amber;
-    ctx.shadowBlur = 25;
-    ctx.fillText('CW', 256, 256);
-
-    return new THREE.CanvasTexture(c);
+  function initScreenCanvas() {
+    screenCanvas = document.createElement('canvas');
+    screenCanvas.width = 1024;
+    screenCanvas.height = 640;
+    screenCtx = screenCanvas.getContext('2d');
+    screenTexture = new THREE.CanvasTexture(screenCanvas);
+    drawScreenContent(0);
+    return screenTexture;
   }
 
-  // 1. Hero — Quantum Core Cage with CW Emblem Sphere
-  const heroModel = new THREE.Group();
-  const heroIco = new THREE.Mesh(new THREE.IcosahedronGeometry(1.9, 1), wireMat(COLOR.amber, 0.7));
-  const cwSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.9, 32, 32),
-    new THREE.MeshBasicMaterial({ map: createCWTexture() })
-  );
-  const heroRing = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.025, 16, 100), wireMat(COLOR.teal, 0.8));
-  heroRing.rotation.x = Math.PI / 3;
-  heroModel.add(heroIco, cwSphere, heroRing);
+  function drawScreenContent(time) {
+    if (!screenCtx) return;
+    const ctx = screenCtx;
+    const w = 1024, h = 640;
 
-  // 2. Courses — Stacked Modular Server Blocks
+    // Background Dark IDE
+    ctx.fillStyle = '#0B0F17';
+    ctx.fillRect(0, 0, w, h);
+
+    // Top Window Controls Bar
+    ctx.fillStyle = '#161C26';
+    ctx.fillRect(0, 0, w, 42);
+    const dots = ['#FF5F56', '#FFBD2E', '#27C93F'];
+    dots.forEach((color, idx) => {
+      ctx.beginPath();
+      ctx.arc(24 + idx * 22, 21, 6, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+
+    // Editor Tab
+    ctx.fillStyle = '#0B0F17';
+    ctx.fillRect(100, 8, 180, 34);
+    ctx.fillStyle = COLOR.teal;
+    ctx.font = '600 15px "Fira Code", monospace';
+    ctx.fillText('CodingWale.js', 125, 30);
+
+    // Sidebar line
+    ctx.strokeStyle = '#1E2638';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(50, 42); ctx.lineTo(50, h);
+    ctx.stroke();
+
+    // Line numbers
+    ctx.fillStyle = '#3A4863';
+    ctx.font = '14px "Fira Code", monospace';
+    for (let i = 1; i <= 14; i++) {
+      ctx.fillText(i < 10 ? ' ' + i : '' + i, 16, 60 + i * 32);
+    }
+
+    // Code Lines
+    const lines = [
+      { text: "import { Platform } from '@codingwale/core';", col: COLOR.violet },
+      { text: "", col: "#fff" },
+      { text: "// Initialize Cybernetic Dev System", col: "#4A5B78" },
+      { text: "const app = new Platform({", col: COLOR.amber },
+      { text: "  learningMode: 'interactive',", col: '#E0E6ED' },
+      { text: "  mentorSupport: true,", col: '#E0E6ED' },
+      { text: "  realWorldProjects: 100+", col: COLOR.teal },
+      { text: "});", col: COLOR.amber },
+      { text: "", col: "#fff" },
+      { text: "await app.launchCareer();", col: COLOR.teal }
+    ];
+
+    lines.forEach((line, idx) => {
+      ctx.fillStyle = line.col;
+      ctx.font = '600 20px "Fira Code", monospace';
+      ctx.fillText(line.text, 80, 95 + idx * 32);
+    });
+
+    // Blinking Cursor
+    if (Math.sin(time * 6) > 0) {
+      ctx.fillStyle = COLOR.teal;
+      ctx.fillRect(365, 365, 12, 22);
+    }
+
+    // Floating CW Logo Watermark (Right side of screen)
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = COLOR.amber;
+    ctx.font = '900 180px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CW', 780, 380);
+    ctx.restore();
+
+    // Bottom Terminal Bar
+    ctx.fillStyle = '#121722';
+    ctx.fillRect(50, h - 110, w - 50, 110);
+    ctx.strokeStyle = COLOR.teal;
+    ctx.strokeRect(50, h - 110, w - 50, 1);
+
+    ctx.fillStyle = COLOR.teal;
+    ctx.font = '16px "Fira Code", monospace';
+    ctx.fillText('> TERMINAL: Status Ready | System Online', 75, h - 70);
+    ctx.fillStyle = COLOR.amber;
+    ctx.fillText('> codingwale --build successful [200 OK]', 75, h - 35);
+
+    if (screenTexture) screenTexture.needsUpdate = true;
+  }
+
+  /* ---------------------------------------------------------
+     1. HERO MODEL — 3D Cyber Monitor
+     --------------------------------------------------------- */
+  const heroModel = new THREE.Group();
+
+  // Monitor Display Frame
+  const frameGeo = new THREE.BoxGeometry(3.6, 2.3, 0.12);
+  const frameMat = new THREE.MeshBasicMaterial({ color: '#161B22' });
+  const monitorFrame = new THREE.Mesh(frameGeo, frameMat);
+
+  // Outer Neon Bezel Border
+  const bezelGeo = new THREE.BoxGeometry(3.68, 2.38, 0.08);
+  const bezelMat = wireMat(COLOR.teal, 0.8);
+  const bezel = new THREE.Mesh(bezelGeo, bezelMat);
+
+  // Monitor Screen (Canvas Texture Surface)
+  const screenGeo = new THREE.PlaneGeometry(3.4, 2.1);
+  const screenMat = new THREE.MeshBasicMaterial({
+    map: initScreenCanvas(),
+    side: THREE.DoubleSide
+  });
+  const monitorScreen = new THREE.Mesh(screenGeo, screenMat);
+  monitorScreen.position.z = 0.07;
+
+  // Stand Neck
+  const neckGeo = new THREE.CylinderGeometry(0.08, 0.12, 1.1, 16);
+  const neckMat = new THREE.MeshBasicMaterial({ color: '#21262D' });
+  const neck = new THREE.Mesh(neckGeo, neckMat);
+  neck.position.set(0, -1.3, -0.2);
+  neck.rotation.x = 0.15;
+
+  // Stand Base
+  const baseGeo = new THREE.CylinderGeometry(0.9, 1.1, 0.06, 6);
+  const baseMat = wireMat(COLOR.amber, 0.9);
+  const base = new THREE.Mesh(baseGeo, baseMat);
+  base.position.set(0, -1.8, -0.1);
+
+  // Glowing Backdrop Ambient Ring behind Monitor
+  const haloGeo = new THREE.TorusGeometry(1.9, 0.02, 16, 100);
+  const haloMat = wireMat(COLOR.amber, 0.6);
+  const halo = new THREE.Mesh(haloGeo, haloMat);
+  halo.position.z = -0.3;
+
+  // Floating Cyber Code Brackets floating in front
+  const bracketGroup = new THREE.Group();
+  const bLeft = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.03, 8, 24, Math.PI), wireMat(COLOR.teal, 0.9));
+  bLeft.position.set(-2.2, 0, 0.5);
+  bLeft.rotation.z = Math.PI / 2;
+
+  const bRight = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.03, 8, 24, Math.PI), wireMat(COLOR.amber, 0.9));
+  bRight.position.set(2.2, 0, 0.5);
+  bRight.rotation.z = -Math.PI / 2;
+
+  bracketGroup.add(bLeft, bRight);
+
+  heroModel.add(monitorFrame, bezel, monitorScreen, neck, base, halo, bracketGroup);
+
+  /* ---------------------------------------------------------
+     2. COURSES — Stacked Server Blocks
+     --------------------------------------------------------- */
   const coursesModel = new THREE.Group();
   const moduleColors = [COLOR.amber, COLOR.teal, COLOR.violet, COLOR.teal, COLOR.amber];
   for (let i = 0; i < 5; i++) {
@@ -188,7 +314,9 @@
     coursesModel.add(box);
   }
 
-  // 3. Dashboard — Radar Telemetry Rings
+  /* ---------------------------------------------------------
+     3. DASHBOARD — Telemetry Rings
+     --------------------------------------------------------- */
   const dashboardModel = new THREE.Group();
   const ringOuter = new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.02, 8, 64), wireMat(COLOR.teal));
   const ringInner = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.015, 8, 48), wireMat(COLOR.amber));
@@ -197,7 +325,9 @@
   const hub = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 0), wireMat(COLOR.violet));
   dashboardModel.add(ringOuter, ringInner, hub);
 
-  // 4. Stories — Trajectory Ribbon Path
+  /* ---------------------------------------------------------
+     4. STORIES — Ribbon Trajectory
+     --------------------------------------------------------- */
   const storiesCurve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-1.6, -1.4, 0),
     new THREE.Vector3(-0.6, -0.3, 0.6),
@@ -214,7 +344,9 @@
     storiesModel.add(dot);
   });
 
-  // 5. About — Lattice Network
+  /* ---------------------------------------------------------
+     5. ABOUT — Lattice Network
+     --------------------------------------------------------- */
   const aboutModel = new THREE.Group();
   const latticeGeo = new THREE.BufferGeometry();
   const latticePts = [];
@@ -225,13 +357,10 @@
   }
   latticeGeo.setAttribute('position', new THREE.Float32BufferAttribute(latticePts, 3));
   aboutModel.add(new THREE.LineSegments(latticeGeo, new THREE.LineBasicMaterial({ color: COLOR.violet, transparent: true, opacity: 0.8 })));
-  for (let i = 0; i < 5; i++) {
-    const node = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), new THREE.MeshBasicMaterial({ color: i % 2 ? COLOR.amber : COLOR.teal }));
-    node.position.set(-1.6, -1.4 + i * 0.7, 0);
-    aboutModel.add(node);
-  }
 
-  // 6. Contact — Pulsing Signal Beacon
+  /* ---------------------------------------------------------
+     6. CONTACT — Signal Beacon
+     --------------------------------------------------------- */
   const contactModel = new THREE.Group();
   const beaconCore = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), wireMat(COLOR.amber));
   contactModel.add(beaconCore);
@@ -278,7 +407,7 @@
     sectionEls.forEach((el) => io.observe(el));
   }
 
-  // Mouse Parallax Physics Lerp
+  // Parallax Tilt Lerp
   let targetRotX = 0, targetRotY = 0;
   if (!isSmall) {
     window.addEventListener('pointermove', (e) => {
@@ -291,7 +420,7 @@
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    focal.position.set(window.innerWidth < 720 ? 0 : 2.5, window.innerWidth < 720 ? -1.8 : 0, 0);
+    focal.position.set(window.innerWidth < 720 ? 0 : 2.2, window.innerWidth < 720 ? -1.6 : 0, 0);
   });
 
   /* ---------------------------------------------------------
@@ -320,11 +449,14 @@
       mesh.visible = next > 0.02;
     });
 
-    // Model specific rotations
-    heroIco.rotation.y = t * 0.2;
-    cwSphere.rotation.y = -t * 0.4;
-    heroRing.rotation.z = t * 0.15;
+    // 1. Hero Monitor Animations
+    drawScreenContent(t);
+    heroModel.position.y = Math.sin(t * 1.5) * 0.08; // Levitation
+    halo.rotation.z = t * 0.15;
+    bLeft.position.y = Math.sin(t * 2) * 0.05;
+    bRight.position.y = -Math.sin(t * 2) * 0.05;
 
+    // Other section model animations
     coursesModel.rotation.y = t * 0.2;
     coursesModel.children.forEach((box, i) => { box.position.y = -1.1 + i * 0.55 + Math.sin(t * 1.5 + i) * 0.03; });
 
